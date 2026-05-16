@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Next.js
+.next/
+out/
+build/
+
+# Env — NE JAMAIS committer
+.env.local
+.env.*.local
+.env
+
+# Vercel
+.vercel
+
+# Playwright
+playwright/.auth/user.json
+playwright-report/
+test-results/
+
+# Misc
+.DS_Store
+*.pem
+npm-debug.log*
