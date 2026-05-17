@@ -51,7 +51,7 @@ export function Sidebar({ nomSalon, alertesStock, logo, onClose }: { nomSalon: s
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
         {navItems.map(({ href, label, icon: Icon }) => {
-          const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href);
+          const isActive = pathname === href || (href !== "/" && pathname.startsWith(href + "/") && !navItems.some(n => n.href !== href && n.href.startsWith(href + "/") && pathname.startsWith(n.href)));
           const badge = href === "/stock" && alertesStock > 0 ? alertesStock : null;
 
           return (
