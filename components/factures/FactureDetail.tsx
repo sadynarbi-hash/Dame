@@ -99,12 +99,18 @@ export function FactureDetail({ facture, entreprise }: Props) {
 
       {/* Reçu */}
       <div id="facture-content" className="bg-white rounded-2xl shadow-md overflow-hidden border">
-        {/* En-tête salon */}
-        <div className="flex flex-col items-center pt-8 pb-5 px-6 gap-2" style={{ backgroundColor: `${couleur}10` }}>
+        {/* Bandeau FACTURE */}
+        <div className="flex items-center justify-between px-6 py-3 bg-gray-50 border-b">
+          <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Facture</span>
+          <span className="font-mono text-sm font-semibold text-gray-500">{facture.numero}</span>
+        </div>
+
+        {/* En-tête salon — fond neutre */}
+        <div className="flex flex-col items-center pt-6 pb-5 px-6 gap-2 bg-white">
           {entreprise?.logo ? (
-            <img src={entreprise.logo} alt={entreprise.nom} className="h-20 w-20 rounded-full object-cover border-4 border-white shadow" />
+            <img src={entreprise.logo} alt={entreprise.nom} className="h-20 w-20 rounded-full object-cover border-4 border-gray-100 shadow" />
           ) : (
-            <div className="h-20 w-20 rounded-full flex items-center justify-center border-4 border-white shadow text-2xl font-bold text-white" style={{ backgroundColor: couleur }}>
+            <div className="h-20 w-20 rounded-full flex items-center justify-center border-4 border-gray-100 shadow text-2xl font-bold text-white" style={{ backgroundColor: couleur }}>
               {entreprise?.nom?.[0] ?? "S"}
             </div>
           )}
