@@ -17,7 +17,9 @@ interface StockForm { nom: string; reference: string; categorie: string; quantit
 const emptyForm: StockForm = { nom: "", reference: "", categorie: "", quantite: 0, unite: "unité", seuilAlerte: 3, prixAchat: 0, fournisseur: "" };
 const UNITES = ["unité", "litre", "kg", "flacon", "boîte"];
 
-export function StockClient({ initialStock }: { initialStock: StockRow[] }) {
+type ArticleService = { id: string; nom: string; stock_id: string };
+
+export function StockClient({ initialStock, articles }: { initialStock: StockRow[]; articles: ArticleService[] }) {
   const [stock, setStock] = useState(initialStock);
   const [search, setSearch] = useState("");
   const [filtreAlertes, setFiltreAlertes] = useState(false);
@@ -138,16 +140,23 @@ export function StockClient({ initialStock }: { initialStock: StockRow[] }) {
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>Article *</Label>
-              <Select value={entreeArticleId} onValueChange={setEntreeArticleId}>
-                <SelectTrigger><SelectValue placeholder="Sélectionner un article…" /></SelectTrigger>
-                <SelectContent>
-                  {stock.map(a => (
-                    <SelectItem key={a.id} value={a.id}>
-                      {a.nom} — {a.quantite} {a.unite}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {articles.length === 0 ? (
+                <p className="text-sm text-muted-foreground rounded-md border p-3">Aucun article lié à un stock. Créez un article dans <strong>Services</strong> et associez-lui un stock.</p>
+              ) : (
+                <Select value={entreeArticleId} onValueChange={setEntreeArticleId}>
+                  <SelectTrigger><SelectValue placeholder="Sélectionner un article…" /></SelectTrigger>
+                  <SelectContent>
+                    {articles.map(a => {
+                      const stockItem = stock.find(s => s.id === a.stock_id);
+                      return (
+                        <SelectItem key={a.id} value={a.id}>
+                          {a.nom}{stockItem ? ` — ${stockItem.quantite} ${stockItem.unite}` : ""}
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
             <div className="space-y-2">
               <Label>Quantité à ajouter *</Label>
@@ -157,11 +166,13 @@ export function StockClient({ initialStock }: { initialStock: StockRow[] }) {
           <DialogFooter>
             <Button variant="outline" onClick={() => setEntreeOpen(false)}>Annuler</Button>
             <Button
-              disabled={!entreeArticleId || entreeQte <= 0 || isPending}
+              disabled={!entreeArticleId || entreeQte <= 0 || isPending || articles.length === 0}
               onClick={() => {
+                const article = articles.find(a => a.id === entreeArticleId);
+                if (!article) return;
                 startTransition(async () => {
-                  await ajusterQuantite(entreeArticleId, entreeQte);
-                  setStock(prev => prev.map(a => a.id === entreeArticleId ? { ...a, quantite: a.quantite + entreeQte } : a));
+                  await ajusterQuantite(article.stock_id, entreeQte);
+                  setStock(prev => prev.map(s => s.id === article.stock_id ? { ...s, quantite: s.quantite + entreeQte } : s));
                   setEntreeOpen(false);
                 });
               }}
