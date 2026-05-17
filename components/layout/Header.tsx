@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Bell, Search } from "lucide-react";
+import { Bell, Search, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatDate } from "@/lib/utils/formatters";
@@ -18,7 +18,7 @@ const pageTitles: Record<string, string> = {
   "/parametres": "Paramètres",
 };
 
-export function Header({ alertesStock }: { alertesStock: number }) {
+export function Header({ alertesStock, onMenuClick }: { alertesStock: number; onMenuClick?: () => void }) {
   const pathname = usePathname();
 
   const title = Object.entries(pageTitles)
@@ -26,10 +26,19 @@ export function Header({ alertesStock }: { alertesStock: number }) {
     .find(([key]) => pathname.startsWith(key))?.[1] ?? "Walima Techno";
 
   return (
-    <header className="flex h-16 items-center justify-between border-b bg-white px-6 shadow-sm">
-      <div>
-        <h1 className="text-lg font-semibold text-foreground">{title}</h1>
-        <p className="text-xs text-muted-foreground">{formatDate(new Date().toISOString())}</p>
+    <header className="flex h-16 items-center justify-between border-b bg-white px-4 lg:px-6 shadow-sm">
+      <div className="flex items-center gap-3">
+        <button
+          onClick={onMenuClick}
+          className="lg:hidden p-2 rounded-md hover:bg-muted transition-colors"
+          aria-label="Menu"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
+        <div>
+          <h1 className="text-base lg:text-lg font-semibold text-foreground">{title}</h1>
+          <p className="text-xs text-muted-foreground hidden sm:block">{formatDate(new Date().toISOString())}</p>
+        </div>
       </div>
 
       <div className="flex items-center gap-3">

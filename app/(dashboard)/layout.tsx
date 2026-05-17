@@ -1,6 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { Sidebar } from "@/components/layout/Sidebar";
-import { Header } from "@/components/layout/Header";
+import { LayoutClient } from "@/components/layout/LayoutClient";
 import { ThemeWrapper } from "@/components/layout/ThemeWrapper";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -15,13 +14,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   return (
     <ThemeWrapper couleur={couleur}>
-      <Sidebar nomSalon={nomSalon} alertesStock={alertesStock} logo={logo} />
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <Header alertesStock={alertesStock} />
-        <main className="flex-1 overflow-y-auto p-6">
-          {children}
-        </main>
-      </div>
+      <LayoutClient nomSalon={nomSalon} alertesStock={alertesStock} logo={logo}>
+        {children}
+      </LayoutClient>
     </ThemeWrapper>
   );
 }

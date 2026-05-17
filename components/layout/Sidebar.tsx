@@ -5,7 +5,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, FileText, Users, Scissors,
-  Package, Calendar, TrendingDown, Settings, ChevronRight,
+  Package, Calendar, TrendingDown, Settings, ChevronRight, X,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
@@ -20,13 +20,18 @@ const navItems = [
   { href: "/parametres", label: "Paramètres", icon: Settings },
 ];
 
-export function Sidebar({ nomSalon, alertesStock, logo }: { nomSalon: string; alertesStock: number; logo: string | null }) {
+export function Sidebar({ nomSalon, alertesStock, logo, onClose }: { nomSalon: string; alertesStock: number; logo: string | null; onClose?: () => void }) {
   const pathname = usePathname();
 
   return (
-    <aside className="flex h-full w-64 flex-col bg-sidebar text-sidebar-foreground">
+    <aside className="flex h-full w-64 flex-col bg-sidebar text-sidebar-foreground shadow-xl lg:shadow-none">
       {/* Logo */}
-      <div className="flex items-center gap-3 px-6 py-5 border-b border-sidebar-border">
+      <div className="flex items-center gap-3 px-4 py-5 border-b border-sidebar-border">
+        {onClose && (
+          <button onClick={onClose} className="lg:hidden p-1 rounded hover:bg-sidebar-accent mr-1">
+            <X className="h-4 w-4" />
+          </button>
+        )}
         <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-sidebar-primary overflow-hidden shrink-0">
           {logo ? (
             <Image src={logo} alt={nomSalon} width={36} height={36} className="object-contain" />
@@ -50,6 +55,7 @@ export function Sidebar({ nomSalon, alertesStock, logo }: { nomSalon: string; al
             <Link
               key={href}
               href={href}
+              onClick={onClose}
               className={cn(
                 "group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all",
                 isActive
