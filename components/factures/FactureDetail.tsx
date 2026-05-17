@@ -2,9 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Printer, Send, CheckCircle, Clock, Trash2, CreditCard } from "lucide-react";
+import { ArrowLeft, Send, CheckCircle, Clock, Trash2, CreditCard, Phone, Mail, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -12,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { StatutFactureBadge } from "@/components/shared/StatutBadge";
 import { FacturePdfButton } from "@/components/factures/FacturePdfButton";
 import { updateStatutFacture, deleteFacture } from "@/lib/actions/factures";
-import { formatFCFA, formatDateLong, TVA_TAUX } from "@/lib/utils/formatters";
+import { formatFCFA, formatDate } from "@/lib/utils/formatters";
 import type { StatutFacture } from "@/types";
 
 const MODES_PAIEMENT = [
@@ -23,9 +22,13 @@ const MODES_PAIEMENT = [
   { value: "virement", label: "Virement" },
 ];
 
-const labelModePaiement = (mode: string | null) => {
-  if (!mode) return null;
-  return MODES_PAIEMENT.find(m => m.value === mode)?.label ?? mode;
+const labelModePaiement = (mode: string | null) =>
+  mode ? (MODES_PAIEMENT.find(m => m.value === mode)?.label ?? mode) : null;
+
+type Ligne = {
+  id: string; designation: string; quantite: number;
+  prix_unitaire_ht: number; tva: number; total_ttc: number;
+  agent: { nom: string } | null;
 };
 
 type Props = {
@@ -36,10 +39,11 @@ type Props = {
     notes: string | null; conditions: string | null;
     mode_paiement: string | null;
     client: { nom: string; prenom: string; telephone: string | null; email: string | null; adresse: string | null } | null;
-    lignes: { id: string; designation: string; quantite: number; prix_unitaire_ht: number; tva: number; total_ttc: number }[];
+    lignes: Ligne[];
   };
   entreprise: {
     nom: string; adresse: string; telephone: string; email: string;
+    logo: string | null; couleur_principale: string | null;
     site_web: string | null; mentions_legales: string | null;
   } | null;
 };
@@ -49,6 +53,8 @@ export function FactureDetail({ facture, entreprise }: Props) {
   const [isPending, startTransition] = useTransition();
   const [paiementOpen, setPaiementOpen] = useState(false);
   const [modePaiement, setModePaiement] = useState("especes");
+
+  const couleur = entreprise?.couleur_principale ?? "#7c3aed";
 
   const handleStatut = (statut: StatutFacture) => {
     startTransition(async () => { await updateStatutFacture(facture.id, statut); });
@@ -67,115 +73,155 @@ export function FactureDetail({ facture, entreprise }: Props) {
     }
   };
 
+  // Agent(s) de la facture
+  const agents = Array.from(new Set(facture.lignes.map(l => l.agent?.nom).filter((n): n is string => Boolean(n))));
+  const staffLabel = agents.length > 0 ? agents.join(", ") : null;
+
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-3">
+    <div className="max-w-md mx-auto space-y-4">
+      {/* Barre d'actions */}
+      <div className="flex items-center justify-between flex-wrap gap-2 print:hidden">
         <Button variant="ghost" size="sm" onClick={() => router.back()}><ArrowLeft className="h-4 w-4" />Retour</Button>
         <div className="flex items-center gap-2 flex-wrap">
+          <StatutFactureBadge statut={facture.statut} />
           {facture.statut === "brouillon" && (
-            <Button variant="outline" size="sm" disabled={isPending} onClick={() => handleStatut("envoyee")}><Send className="h-4 w-4" />Marquer envoyée</Button>
+            <Button variant="outline" size="sm" disabled={isPending} onClick={() => handleStatut("envoyee")}><Send className="h-4 w-4" />Envoyer</Button>
           )}
           {facture.statut !== "payee" && (
-            <Button size="sm" className="bg-green-600 hover:bg-green-700" disabled={isPending} onClick={() => setPaiementOpen(true)}><CheckCircle className="h-4 w-4" />Marquer payée</Button>
+            <Button size="sm" className="bg-green-600 hover:bg-green-700" disabled={isPending} onClick={() => setPaiementOpen(true)}><CheckCircle className="h-4 w-4" />Payée</Button>
           )}
           {facture.statut === "envoyee" && (
-            <Button variant="outline" size="sm" disabled={isPending} onClick={() => handleStatut("en_retard")}><Clock className="h-4 w-4" />En retard</Button>
+            <Button variant="outline" size="sm" disabled={isPending} onClick={() => handleStatut("en_retard")}><Clock className="h-4 w-4" /></Button>
           )}
-          <FacturePdfButton facture={facture} />
-          <Button variant="outline" size="sm" onClick={() => window.print()}><Printer className="h-4 w-4" />Imprimer</Button>
-          <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" disabled={isPending} onClick={handleDelete}><Trash2 className="h-4 w-4" /></Button>
+          <Button variant="ghost" size="sm" className="text-destructive" disabled={isPending} onClick={handleDelete}><Trash2 className="h-4 w-4" /></Button>
         </div>
       </div>
 
-      <Card id="facture-content" className="overflow-hidden print:shadow-none print:border-0">
-        <CardContent className="p-8 space-y-8">
-          <div className="flex justify-between items-start flex-wrap gap-6">
-            <div>
-              <h2 className="text-2xl font-bold text-primary">{entreprise?.nom ?? "Salon"}</h2>
-              <p className="text-sm text-muted-foreground mt-1 whitespace-pre-line">{entreprise?.adresse}</p>
-              <p className="text-sm text-muted-foreground">{entreprise?.telephone}</p>
-              <p className="text-sm text-muted-foreground">{entreprise?.email}</p>
+      {/* Reçu */}
+      <div id="facture-content" className="bg-white rounded-2xl shadow-md overflow-hidden border">
+        {/* En-tête salon */}
+        <div className="flex flex-col items-center pt-8 pb-5 px-6 gap-2" style={{ backgroundColor: `${couleur}10` }}>
+          {entreprise?.logo ? (
+            <img src={entreprise.logo} alt={entreprise.nom} className="h-20 w-20 rounded-full object-cover border-4 border-white shadow" />
+          ) : (
+            <div className="h-20 w-20 rounded-full flex items-center justify-center border-4 border-white shadow text-2xl font-bold text-white" style={{ backgroundColor: couleur }}>
+              {entreprise?.nom?.[0] ?? "S"}
             </div>
-            <div className="text-right">
-              <div className="flex items-center gap-3 justify-end mb-2">
-                <span className="text-3xl font-black">FACTURE</span>
-                <StatutFactureBadge statut={facture.statut} />
-              </div>
-              <p className="font-mono text-lg font-semibold text-muted-foreground">{facture.numero}</p>
-              <p className="text-sm text-muted-foreground mt-1">Émis le {formatDateLong(facture.date_emission)}</p>
-              <p className="text-sm text-muted-foreground">Échéance : {formatDateLong(facture.date_echeance)}</p>
-              {facture.date_paiement && (
-                <p className="text-sm text-green-600 font-medium">
-                  Payée le {formatDateLong(facture.date_paiement)}
-                  {facture.mode_paiement && (
-                    <span className="ml-2 inline-flex items-center gap-1 text-xs bg-green-100 text-green-700 rounded-full px-2 py-0.5">
-                      <CreditCard className="h-3 w-3" />{labelModePaiement(facture.mode_paiement)}
-                    </span>
-                  )}
-                </p>
-              )}
-            </div>
+          )}
+          <h2 className="text-lg font-bold mt-1">{entreprise?.nom ?? "Salon"}</h2>
+          <div className="flex flex-col items-center gap-0.5 text-sm text-muted-foreground">
+            {entreprise?.telephone && (
+              <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{entreprise.telephone}</span>
+            )}
+            {entreprise?.email && (
+              <span className="flex items-center gap-1"><Mail className="h-3 w-3" />{entreprise.email}</span>
+            )}
+            {entreprise?.adresse && (
+              <span className="flex items-center gap-1 text-center"><MapPin className="h-3 w-3 shrink-0" />{entreprise.adresse}</span>
+            )}
           </div>
+        </div>
 
-          <Separator />
+        <Separator />
 
+        {/* Numéro / Date / Staff */}
+        <div className="grid grid-cols-3 text-center px-4 py-3 text-xs bg-muted/30">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Facturé à</p>
-            <p className="font-semibold text-lg">{facture.client ? `${facture.client.prenom} ${facture.client.nom}` : "Client inconnu"}</p>
-            {facture.client?.telephone && <p className="text-sm text-muted-foreground">{facture.client.telephone}</p>}
-            {facture.client?.email && <p className="text-sm text-muted-foreground">{facture.client.email}</p>}
-            {facture.client?.adresse && <p className="text-sm text-muted-foreground">{facture.client.adresse}</p>}
+            <p className="text-muted-foreground uppercase tracking-wide">Reçu</p>
+            <p className="font-bold font-mono">{facture.numero.split("-").pop()}</p>
           </div>
-
-          <Separator />
-
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b">
-                <th className="pb-3 text-left font-semibold text-muted-foreground">Désignation</th>
-                <th className="pb-3 text-center font-semibold text-muted-foreground">Qté</th>
-                <th className="pb-3 text-right font-semibold text-muted-foreground">Prix HT</th>
-                <th className="pb-3 text-center font-semibold text-muted-foreground">TVA</th>
-                <th className="pb-3 text-right font-semibold text-muted-foreground">Total TTC</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {facture.lignes.map((ligne) => (
-                <tr key={ligne.id}>
-                  <td className="py-3 font-medium">{ligne.designation}</td>
-                  <td className="py-3 text-center text-muted-foreground">{ligne.quantite}</td>
-                  <td className="py-3 text-right text-muted-foreground">{formatFCFA(ligne.prix_unitaire_ht)}</td>
-                  <td className="py-3 text-center text-muted-foreground">{ligne.tva}%</td>
-                  <td className="py-3 text-right font-semibold">{formatFCFA(ligne.total_ttc)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          <div className="flex justify-end">
-            <div className="w-72 space-y-2 rounded-xl bg-muted/40 p-4">
-              <div className="flex justify-between text-sm"><span className="text-muted-foreground">Sous-total HT</span><span>{formatFCFA(facture.sous_total)}</span></div>
-              <div className="flex justify-between text-sm"><span className="text-muted-foreground">TVA ({TVA_TAUX}%)</span><span>{formatFCFA(facture.montant_tva)}</span></div>
-              <Separator />
-              <div className="flex justify-between font-bold text-xl"><span>Total TTC</span><span className="text-primary">{formatFCFA(facture.total_ttc)}</span></div>
+          <div>
+            <p className="text-muted-foreground uppercase tracking-wide">Date</p>
+            <p className="font-semibold">{formatDate(facture.date_emission)}</p>
+          </div>
+          {staffLabel ? (
+            <div>
+              <p className="text-muted-foreground uppercase tracking-wide">Staff</p>
+              <p className="font-semibold truncate">{staffLabel}</p>
             </div>
+          ) : (
+            <div>
+              <p className="text-muted-foreground uppercase tracking-wide">Client</p>
+              <p className="font-semibold truncate">{facture.client?.prenom ?? "—"}</p>
+            </div>
+          )}
+        </div>
+
+        <Separator />
+
+        {/* Lignes */}
+        <div className="px-6 py-4 space-y-1">
+          <div className="flex justify-between text-xs font-semibold text-muted-foreground uppercase tracking-wide pb-2">
+            <span>Articles</span><span>Prix</span>
           </div>
-
-          {(facture.notes || facture.conditions) && (
-            <>
-              <Separator />
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 text-sm">
-                {facture.notes && <div><p className="font-semibold text-muted-foreground mb-1">Notes</p><p className="text-muted-foreground">{facture.notes}</p></div>}
-                {facture.conditions && <div><p className="font-semibold text-muted-foreground mb-1">Conditions</p><p className="text-muted-foreground">{facture.conditions}</p></div>}
+          {facture.lignes.map((l) => (
+            <div key={l.id} className="flex justify-between items-baseline gap-2 py-1">
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-sm leading-tight">{l.designation}</p>
+                {l.quantite > 1 && (
+                  <p className="text-xs text-muted-foreground">{l.quantite} × {formatFCFA(l.prix_unitaire_ht)}</p>
+                )}
               </div>
-            </>
-          )}
+              <span className="font-semibold text-sm shrink-0">{formatFCFA(l.total_ttc)}</span>
+            </div>
+          ))}
+        </div>
 
-          {entreprise?.mentions_legales && (
-            <p className="text-xs text-muted-foreground/60 text-center border-t pt-4">{entreprise.mentions_legales}</p>
+        <Separator />
+
+        {/* Totaux */}
+        <div className="px-6 py-4 space-y-2">
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Sous-total</span>
+            <span>{formatFCFA(facture.sous_total)}</span>
+          </div>
+          {facture.montant_tva > 0 && (
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Taxes (TVA)</span>
+              <span>{formatFCFA(facture.montant_tva)}</span>
+            </div>
           )}
-        </CardContent>
-      </Card>
+          <Separator />
+          <div className="flex justify-between text-lg font-bold">
+            <span>Total</span>
+            <span style={{ color: couleur }}>{formatFCFA(facture.total_ttc)}</span>
+          </div>
+          {facture.date_paiement && (
+            <div className="flex items-center justify-center gap-2 pt-1">
+              <span className="text-xs text-green-600 font-medium">
+                Payée le {formatDate(facture.date_paiement)}
+                {facture.mode_paiement && (
+                  <span className="ml-2 inline-flex items-center gap-1 bg-green-100 text-green-700 rounded-full px-2 py-0.5">
+                    <CreditCard className="h-3 w-3" />{labelModePaiement(facture.mode_paiement)}
+                  </span>
+                )}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Notes / Conditions */}
+        {(facture.notes || facture.conditions) && (
+          <>
+            <Separator />
+            <div className="px-6 py-3 text-xs text-muted-foreground text-center space-y-1">
+              {facture.notes && <p>{facture.notes}</p>}
+              {facture.conditions && <p className="italic">{facture.conditions}</p>}
+            </div>
+          </>
+        )}
+
+        {entreprise?.mentions_legales && (
+          <div className="px-6 pb-4 text-[10px] text-muted-foreground/50 text-center">
+            {entreprise.mentions_legales}
+          </div>
+        )}
+      </div>
+
+      {/* Bouton Envoyer */}
+      <div className="print:hidden">
+        <FacturePdfButton facture={facture} couleur={couleur} />
+      </div>
 
       {/* Dialog mode de paiement */}
       <Dialog open={paiementOpen} onOpenChange={setPaiementOpen}>
@@ -184,9 +230,7 @@ export function FactureDetail({ facture, entreprise }: Props) {
           <div className="space-y-3 py-2">
             <Label>Comment le client a-t-il payé ?</Label>
             <Select value={modePaiement} onValueChange={setModePaiement}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
+              <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {MODES_PAIEMENT.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
               </SelectContent>
@@ -195,7 +239,7 @@ export function FactureDetail({ facture, entreprise }: Props) {
           <DialogFooter>
             <Button variant="outline" onClick={() => setPaiementOpen(false)}>Annuler</Button>
             <Button className="bg-green-600 hover:bg-green-700" disabled={isPending} onClick={handlePayer}>
-              <CheckCircle className="h-4 w-4" />Confirmer paiement
+              <CheckCircle className="h-4 w-4" />Confirmer
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -6,7 +6,7 @@ export default async function FactureDetailPage({ params }: { params: { id: stri
   const supabase = createClient();
   const [{ data: facture }, { data: entreprise }] = await Promise.all([
     supabase.from("factures")
-      .select("*, client:clients(*), lignes:lignes_facture(*)")
+      .select("*, client:clients(*), lignes:lignes_facture(*, agent:agents(nom))")
       .eq("id", params.id)
       .single(),
     supabase.from("entreprises").select("*").single(),

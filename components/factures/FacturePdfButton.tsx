@@ -43,8 +43,9 @@ async function genererPdf(elementId: string, numero: string): Promise<Blob> {
   return pdf.output("blob");
 }
 
-export function FacturePdfButton({ facture }: { facture: FactureInfo }) {
+export function FacturePdfButton({ facture, couleur }: { facture: FactureInfo; couleur?: string }) {
   const [loading, setLoading] = useState(false);
+  const bg = couleur ?? "#7c3aed";
 
   const telecharger = async () => {
     setLoading(true);
@@ -72,10 +73,8 @@ export function FacturePdfButton({ facture }: { facture: FactureInfo }) {
       if (navigator.canShare?.({ files: [file] })) {
         await navigator.share({ files: [file], text: message });
       } else {
-        // fallback : ouvrir WhatsApp avec le message, sans fichier
         const phone = facture.client?.telephone?.replace(/\D/g, "") ?? "";
-        const url = `https://wa.me/${phone ? phone : ""}?text=${encodeURIComponent(message)}`;
-        // télécharger le PDF d'abord, puis ouvrir WhatsApp
+        const url = `https://wa.me/${phone || ""}?text=${encodeURIComponent(message)}`;
         const dlUrl = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = dlUrl;
@@ -90,12 +89,18 @@ export function FacturePdfButton({ facture }: { facture: FactureInfo }) {
   };
 
   return (
-    <div className="flex items-center gap-2">
-      <Button variant="outline" size="sm" onClick={telecharger} disabled={loading}>
-        <Download className="h-4 w-4" />{loading ? "..." : "PDF"}
-      </Button>
-      <Button size="sm" className="bg-[#25D366] hover:bg-[#1ebe57] text-white" onClick={partagerWhatsapp} disabled={loading}>
-        <MessageCircle className="h-4 w-4" />{loading ? "..." : "WhatsApp"}
+    <div className="flex flex-col gap-2">
+      <button
+        onClick={partagerWhatsapp}
+        disabled={loading}
+        className="w-full py-4 rounded-2xl text-white font-bold text-base flex items-center justify-center gap-2 transition-opacity disabled:opacity-60"
+        style={{ backgroundColor: bg }}
+      >
+        <MessageCircle className="h-5 w-5" />
+        {loading ? "Génération en cours..." : "Envoyer la facture"}
+      </button>
+      <Button variant="outline" size="sm" onClick={telecharger} disabled={loading} className="w-full">
+        <Download className="h-4 w-4" />Télécharger PDF
       </Button>
     </div>
   );
