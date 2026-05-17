@@ -85,6 +85,7 @@ export type Database = {
           date_emission: string; date_echeance: string; date_paiement: string | null;
           sous_total: number; montant_tva: number; total_ttc: number;
           notes: string | null; conditions: string | null;
+          mode_paiement: string | null;
           created_at: string; updated_at: string;
         };
         Insert: {
@@ -93,6 +94,7 @@ export type Database = {
           date_emission: string; date_echeance: string; date_paiement?: string | null;
           sous_total: number; montant_tva: number; total_ttc: number;
           notes?: string | null; conditions?: string | null;
+          mode_paiement?: string | null;
           created_at?: string; updated_at?: string;
         };
         Update: {
@@ -101,6 +103,7 @@ export type Database = {
           date_emission?: string; date_echeance?: string; date_paiement?: string | null;
           sous_total?: number; montant_tva?: number; total_ttc?: number;
           notes?: string | null; conditions?: string | null;
+          mode_paiement?: string | null;
           created_at?: string; updated_at?: string;
         };
         Relationships: [];

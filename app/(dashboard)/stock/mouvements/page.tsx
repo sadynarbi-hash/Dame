@@ -4,19 +4,26 @@ import { formatFCFA, formatDate } from "@/lib/utils/formatters";
 import { ArrowDownCircle, ArrowUpCircle, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { MouvementsFilter } from "@/components/stock/MouvementsFilter";
+import { Suspense } from "react";
 
-export default async function MouvementsStockPage() {
+export default async function MouvementsStockPage({ searchParams }: { searchParams: { from?: string; to?: string } }) {
   const supabase = createClient();
+  const from = searchParams.from ?? "";
+  const to = searchParams.to ?? "";
+
+  let query = supabase.from("mouvements_stock").select("*, facture:factures(numero)").order("date", { ascending: false });
+  if (from) query = query.gte("date", from);
+  if (to) query = query.lte("date", to);
 
   const [{ data: mouvements }, { data: stockItems }] = await Promise.all([
-    supabase.from("mouvements_stock").select("*, facture:factures(numero)").order("date", { ascending: false }).limit(100),
+    query,
     supabase.from("stock").select("id, prix_achat"),
   ]);
 
   const mvts = mouvements ?? [];
   const prixAchatMap = new Map((stockItems ?? []).map(s => [s.id, s.prix_achat]));
 
-  // Calcul stats globales
   const totalEntrees = mvts.filter(m => m.type === "entree").reduce((s, m) => s + m.quantite * m.prix_unitaire, 0);
   const sorties = mvts.filter(m => m.type === "sortie");
   const totalCA = sorties.reduce((s, m) => s + m.quantite * m.prix_unitaire, 0);
@@ -32,6 +39,10 @@ export default async function MouvementsStockPage() {
         <p className="text-sm text-muted-foreground">Historique des entrées et sorties d&apos;articles</p>
         <Button variant="outline" size="sm" asChild><Link href="/stock">← Stock</Link></Button>
       </div>
+
+      <Suspense>
+        <MouvementsFilter from={from} to={to} />
+      </Suspense>
 
       {/* Stats résumé */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -66,7 +77,7 @@ export default async function MouvementsStockPage() {
 
       {/* Table mouvements */}
       <Card>
-        <CardHeader><CardTitle className="text-base">Détail des mouvements</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">Détail des mouvements {(from || to) && <span className="text-sm font-normal text-muted-foreground ml-2">{from && `du ${formatDate(from)}`}{from && to && " "}{to && `au ${formatDate(to)}`}</span>}</CardTitle></CardHeader>
         <CardContent className="p-0">
           {mvts.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-10">Aucun mouvement enregistré</p>

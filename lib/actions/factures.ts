@@ -89,10 +89,13 @@ export async function createFacture(data: {
   redirect(`/factures/${facture.id}`);
 }
 
-export async function updateStatutFacture(id: string, statut: StatutFacture) {
+export async function updateStatutFacture(id: string, statut: StatutFacture, modePaiement?: string) {
   const supabase = createClient();
   const update: Record<string, unknown> = { statut };
-  if (statut === "payee") update.date_paiement = new Date().toISOString().split("T")[0];
+  if (statut === "payee") {
+    update.date_paiement = new Date().toISOString().split("T")[0];
+    if (modePaiement) update.mode_paiement = modePaiement;
+  }
 
   const { error } = await supabase.from("factures").update(update).eq("id", id);
   if (error) return { error: error.message };

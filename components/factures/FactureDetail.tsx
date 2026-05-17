@@ -1,15 +1,31 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Printer, Send, CheckCircle, Clock, Trash2 } from "lucide-react";
+import { ArrowLeft, Printer, Send, CheckCircle, Clock, Trash2, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { StatutFactureBadge } from "@/components/shared/StatutBadge";
 import { updateStatutFacture, deleteFacture } from "@/lib/actions/factures";
 import { formatFCFA, formatDateLong, TVA_TAUX } from "@/lib/utils/formatters";
 import type { StatutFacture } from "@/types";
+
+const MODES_PAIEMENT = [
+  { value: "especes", label: "Espèces" },
+  { value: "wave", label: "Wave" },
+  { value: "orange_money", label: "Orange Money" },
+  { value: "cheque", label: "Chèque" },
+  { value: "virement", label: "Virement" },
+];
+
+const labelModePaiement = (mode: string | null) => {
+  if (!mode) return null;
+  return MODES_PAIEMENT.find(m => m.value === mode)?.label ?? mode;
+};
 
 type Props = {
   facture: {
@@ -17,6 +33,7 @@ type Props = {
     date_emission: string; date_echeance: string; date_paiement: string | null;
     sous_total: number; montant_tva: number; total_ttc: number;
     notes: string | null; conditions: string | null;
+    mode_paiement: string | null;
     client: { nom: string; prenom: string; telephone: string | null; email: string | null; adresse: string | null } | null;
     lignes: { id: string; designation: string; quantite: number; prix_unitaire_ht: number; tva: number; total_ttc: number }[];
   };
@@ -29,9 +46,18 @@ type Props = {
 export function FactureDetail({ facture, entreprise }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const [paiementOpen, setPaiementOpen] = useState(false);
+  const [modePaiement, setModePaiement] = useState("especes");
 
   const handleStatut = (statut: StatutFacture) => {
     startTransition(async () => { await updateStatutFacture(facture.id, statut); });
+  };
+
+  const handlePayer = () => {
+    startTransition(async () => {
+      await updateStatutFacture(facture.id, "payee", modePaiement);
+      setPaiementOpen(false);
+    });
   };
 
   const handleDelete = () => {
@@ -49,7 +75,7 @@ export function FactureDetail({ facture, entreprise }: Props) {
             <Button variant="outline" size="sm" disabled={isPending} onClick={() => handleStatut("envoyee")}><Send className="h-4 w-4" />Marquer envoyée</Button>
           )}
           {facture.statut !== "payee" && (
-            <Button size="sm" className="bg-green-600 hover:bg-green-700" disabled={isPending} onClick={() => handleStatut("payee")}><CheckCircle className="h-4 w-4" />Marquer payée</Button>
+            <Button size="sm" className="bg-green-600 hover:bg-green-700" disabled={isPending} onClick={() => setPaiementOpen(true)}><CheckCircle className="h-4 w-4" />Marquer payée</Button>
           )}
           {facture.statut === "envoyee" && (
             <Button variant="outline" size="sm" disabled={isPending} onClick={() => handleStatut("en_retard")}><Clock className="h-4 w-4" />En retard</Button>
@@ -76,7 +102,16 @@ export function FactureDetail({ facture, entreprise }: Props) {
               <p className="font-mono text-lg font-semibold text-muted-foreground">{facture.numero}</p>
               <p className="text-sm text-muted-foreground mt-1">Émis le {formatDateLong(facture.date_emission)}</p>
               <p className="text-sm text-muted-foreground">Échéance : {formatDateLong(facture.date_echeance)}</p>
-              {facture.date_paiement && <p className="text-sm text-green-600 font-medium">Payée le {formatDateLong(facture.date_paiement)}</p>}
+              {facture.date_paiement && (
+                <p className="text-sm text-green-600 font-medium">
+                  Payée le {formatDateLong(facture.date_paiement)}
+                  {facture.mode_paiement && (
+                    <span className="ml-2 inline-flex items-center gap-1 text-xs bg-green-100 text-green-700 rounded-full px-2 py-0.5">
+                      <CreditCard className="h-3 w-3" />{labelModePaiement(facture.mode_paiement)}
+                    </span>
+                  )}
+                </p>
+              )}
             </div>
           </div>
 
@@ -139,6 +174,30 @@ export function FactureDetail({ facture, entreprise }: Props) {
           )}
         </CardContent>
       </Card>
+
+      {/* Dialog mode de paiement */}
+      <Dialog open={paiementOpen} onOpenChange={setPaiementOpen}>
+        <DialogContent className="sm:max-w-xs">
+          <DialogHeader><DialogTitle>Mode de paiement</DialogTitle></DialogHeader>
+          <div className="space-y-3 py-2">
+            <Label>Comment le client a-t-il payé ?</Label>
+            <Select value={modePaiement} onValueChange={setModePaiement}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {MODES_PAIEMENT.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPaiementOpen(false)}>Annuler</Button>
+            <Button className="bg-green-600 hover:bg-green-700" disabled={isPending} onClick={handlePayer}>
+              <CheckCircle className="h-4 w-4" />Confirmer paiement
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
