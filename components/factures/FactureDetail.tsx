@@ -186,16 +186,19 @@ export function FactureDetail({ facture, entreprise }: Props) {
             <span>Total</span>
             <span style={{ color: couleur }}>{formatFCFA(facture.total_ttc)}</span>
           </div>
-          {facture.date_paiement && (
-            <div className="flex items-center justify-center gap-2 pt-1">
-              <span className="text-xs text-green-600 font-medium">
-                Payée le {formatDate(facture.date_paiement)}
-                {facture.mode_paiement && (
-                  <span className="ml-2 inline-flex items-center gap-1 bg-green-100 text-green-700 rounded-full px-2 py-0.5">
-                    <CreditCard className="h-3 w-3" />{labelModePaiement(facture.mode_paiement)}
-                  </span>
-                )}
+          {facture.mode_paiement && (
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Mode de paiement</span>
+              <span className="font-semibold flex items-center gap-1">
+                <CreditCard className="h-3.5 w-3.5 text-muted-foreground" />
+                {labelModePaiement(facture.mode_paiement)}
               </span>
+            </div>
+          )}
+          {facture.date_paiement && (
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Payée le</span>
+              <span className="font-semibold text-green-600">{formatDate(facture.date_paiement)}</span>
             </div>
           )}
         </div>
