@@ -9,7 +9,6 @@ import { Plus, Trash2, ArrowLeft, Save, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -43,8 +42,6 @@ const factureSchema = z.object({
   dateEcheance: z.string().min(1),
   modePaiement: z.string().optional(),
   lignes: z.array(ligneSchema).min(1),
-  notes: z.string().optional(),
-  conditions: z.string().optional(),
 });
 
 type FactureForm = z.infer<typeof factureSchema>;
@@ -125,7 +122,6 @@ export function NouvelleFactureForm({ clients, services, agents }: { clients: Cl
     defaultValues: {
       clientId: "", dateEmission: today, dateEcheance: echeanceDefaut,
       lignes: [newLigne()],
-      conditions: "Paiement à réception de facture. Merci pour votre confiance.",
     },
   });
 
@@ -155,7 +151,7 @@ export function NouvelleFactureForm({ clients, services, agents }: { clients: Cl
     }));
 
     startTransition(async () => {
-      const result = await createFacture({ clientId: data.clientId, dateEmission: data.dateEmission, dateEcheance: data.dateEcheance, modePaiement: data.modePaiement, lignes, sousTotal, montantTva, totalTTC, notes: data.notes, conditions: data.conditions });
+      const result = await createFacture({ clientId: data.clientId, dateEmission: data.dateEmission, dateEcheance: data.dateEcheance, modePaiement: data.modePaiement, lignes, sousTotal, montantTva, totalTTC });
       if (result?.error) setServerError(result.error);
     });
   };
@@ -248,7 +244,17 @@ export function NouvelleFactureForm({ clients, services, agents }: { clients: Cl
             })}
 
             <Separator />
-            <div className="flex justify-end">
+            <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+              <div className="w-full sm:w-56 space-y-1">
+                <Label className="text-xs text-muted-foreground">Mode de paiement</Label>
+                <Select onValueChange={(v) => setValue("modePaiement", v === "none" ? undefined : v)}>
+                  <SelectTrigger className="h-9"><SelectValue placeholder="Sélectionner…" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">— Non précisé —</SelectItem>
+                    {MODES_PAIEMENT.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="w-full max-w-xs space-y-2">
                 <div className="flex justify-between text-sm"><span className="text-muted-foreground">Sous-total HT</span><span>{formatFCFA(sousTotal)}</span></div>
                 <div className="flex justify-between text-sm"><span className="text-muted-foreground">TVA ({TVA_TAUX}%)</span><span>{formatFCFA(montantTva)}</span></div>
@@ -256,24 +262,6 @@ export function NouvelleFactureForm({ clients, services, agents }: { clients: Cl
                 <div className="flex justify-between font-bold text-lg"><span>Total TTC</span><span className="text-primary">{formatFCFA(totalTTC)}</span></div>
               </div>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader><CardTitle>Notes et conditions</CardTitle></CardHeader>
-          <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="sm:col-span-2 space-y-2">
-              <Label>Mode de paiement</Label>
-              <Select onValueChange={(v) => setValue("modePaiement", v === "none" ? undefined : v)}>
-                <SelectTrigger><SelectValue placeholder="Sélectionner…" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">— Non précisé —</SelectItem>
-                  {MODES_PAIEMENT.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2"><Label>Notes</Label><Textarea placeholder="Notes pour le client..." {...register("notes")} /></div>
-            <div className="space-y-2"><Label>Conditions de paiement</Label><Textarea {...register("conditions")} /></div>
           </CardContent>
         </Card>
 
