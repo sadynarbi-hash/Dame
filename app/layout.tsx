@@ -5,13 +5,13 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Salon Facture — Gestion de salon de coiffure",
+  title: "Walima Techno — Gestion de salon de coiffure",
   description: "Application de facturation et gestion pour salons de coiffure africains",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Salon Facture",
+    title: "Walima Techno",
   },
 };
 

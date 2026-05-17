@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { createClient_, updateClient, deleteClient } from "@/lib/actions/clients";
-import { formatFCFA, formatDate } from "@/lib/utils/formatters";
+import { formatFCFA, formatDate, formatAnniversaire } from "@/lib/utils/formatters";
 import type { Database } from "@/types/supabase";
 
 type ClientRow = Database["public"]["Tables"]["clients"]["Row"];
@@ -101,7 +101,7 @@ export function ClientsClient({ initialClients }: { initialClients: ClientRow[] 
                 <div className="space-y-1.5">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground"><Phone className="h-3.5 w-3.5" /><span>{client.telephone}</span></div>
                   {client.email && <div className="flex items-center gap-2 text-sm text-muted-foreground"><Mail className="h-3.5 w-3.5" /><span className="truncate">{client.email}</span></div>}
-                  {client.date_naissance && <div className="flex items-center gap-2 text-sm text-muted-foreground"><Cake className="h-3.5 w-3.5" /><span>{formatDate(client.date_naissance)}</span></div>}
+                  {client.date_naissance && <div className="flex items-center gap-2 text-sm text-muted-foreground"><Cake className="h-3.5 w-3.5" /><span>{formatAnniversaire(client.date_naissance)}</span></div>}
                 </div>
                 <div className="flex items-center justify-between pt-2 border-t">
                   <div className="text-center"><p className="text-lg font-bold">{client.nb_factures}</p><p className="text-xs text-muted-foreground">Facture(s)</p></div>
@@ -123,7 +123,39 @@ export function ClientsClient({ initialClients }: { initialClients: ClientRow[] 
             <div className="col-span-2 space-y-2"><Label>Téléphone *</Label><Input value={form.telephone} onChange={(e) => setForm(f => ({ ...f, telephone: e.target.value }))} placeholder="+221 77 000 00 00" /></div>
             <div className="col-span-2 space-y-2"><Label>Email</Label><Input type="email" value={form.email} onChange={(e) => setForm(f => ({ ...f, email: e.target.value }))} /></div>
             <div className="col-span-2 space-y-2"><Label>Adresse</Label><Input value={form.adresse} onChange={(e) => setForm(f => ({ ...f, adresse: e.target.value }))} /></div>
-            <div className="col-span-2 space-y-2"><Label>Date de naissance</Label><Input type="date" value={form.date_naissance} onChange={(e) => setForm(f => ({ ...f, date_naissance: e.target.value }))} /></div>
+            <div className="col-span-2 space-y-2">
+              <Label>Date anniversaire</Label>
+              <div className="flex gap-2">
+                <select
+                  className="flex-1 h-10 rounded-md border border-input bg-background px-3 text-sm"
+                  value={form.date_naissance ? form.date_naissance.split("-")[2] : ""}
+                  onChange={(e) => {
+                    const jour = e.target.value;
+                    const mois = form.date_naissance ? form.date_naissance.split("-")[1] : "01";
+                    setForm(f => ({ ...f, date_naissance: jour ? `1900-${mois}-${jour}` : "" }));
+                  }}
+                >
+                  <option value="">Jour</option>
+                  {Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, "0")).map(j => (
+                    <option key={j} value={j}>{j}</option>
+                  ))}
+                </select>
+                <select
+                  className="flex-1 h-10 rounded-md border border-input bg-background px-3 text-sm"
+                  value={form.date_naissance ? form.date_naissance.split("-")[1] : ""}
+                  onChange={(e) => {
+                    const mois = e.target.value;
+                    const jour = form.date_naissance ? form.date_naissance.split("-")[2] : "01";
+                    setForm(f => ({ ...f, date_naissance: mois ? `1900-${mois}-${jour || "01"}` : "" }));
+                  }}
+                >
+                  <option value="">Mois</option>
+                  {["01","02","03","04","05","06","07","08","09","10","11","12"].map((m, i) => (
+                    <option key={m} value={m}>{["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"][i]}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
             <div className="col-span-2 space-y-2"><Label>Notes</Label><Textarea value={form.notes} onChange={(e) => setForm(f => ({ ...f, notes: e.target.value }))} rows={2} /></div>
           </div>
           <DialogFooter>

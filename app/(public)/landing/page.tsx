@@ -82,7 +82,7 @@ export default function LandingPage() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-900">
               <Scissors className="h-4 w-4 text-white" />
             </div>
-            <span className="font-bold text-gray-900">Salon Facture</span>
+            <span className="font-bold text-gray-900">Walima Techno</span>
           </div>
           <div className="flex items-center gap-3">
             <Link href="/connexion">
@@ -322,7 +322,7 @@ export default function LandingPage() {
             Prêt à professionnaliser votre salon ?
           </h2>
           <p className="text-purple-200 text-lg mb-8">
-            Rejoignez plus de 500 salons qui font confiance à Salon Facture pour leur gestion quotidienne.
+            Rejoignez plus de 500 salons qui font confiance à Walima Techno pour leur gestion quotidienne.
           </p>
           <Link href="/connexion">
             <Button size="lg" className="bg-white text-purple-900 hover:bg-purple-50 font-semibold text-base px-10">
@@ -341,9 +341,9 @@ export default function LandingPage() {
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-800">
               <Scissors className="h-4 w-4 text-white" />
             </div>
-            <span className="font-semibold text-white">Salon Facture</span>
+            <span className="font-semibold text-white">Walima Techno</span>
           </div>
-          <p className="text-sm">© {new Date().getFullYear()} Salon Facture. Tous droits réservés.</p>
+          <p className="text-sm">© {new Date().getFullYear()} Walima Techno. Tous droits réservés.</p>
           <div className="flex gap-4 text-sm">
             <Link href="/connexion" className="hover:text-white transition-colors">Connexion</Link>
             <Link href="/connexion" className="hover:text-white transition-colors">S&apos;inscrire</Link>

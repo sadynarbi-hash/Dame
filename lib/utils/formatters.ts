@@ -31,6 +31,14 @@ export function formatDateRelative(date: string | Date): string {
   return formatDistanceToNow(d, { addSuffix: true, locale: fr });
 }
 
+export function formatAnniversaire(date: string): string {
+  const parts = date.split("-");
+  if (parts.length < 3) return date;
+  const mois = parts[parts.length - 2];
+  const jour = parts[parts.length - 1];
+  return `${jour}/${mois}`;
+}
+
 export function formatHeure(heure: string): string {
   return heure.slice(0, 5);
 }

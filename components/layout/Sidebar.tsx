@@ -73,7 +73,7 @@ export function Sidebar({ nomSalon, alertesStock, logo }: { nomSalon: string; al
       {/* Footer */}
       <div className="border-t border-sidebar-border px-4 py-4">
         <p className="text-xs text-sidebar-foreground/40 text-center">
-          Salon Facture v1.0
+          Walima Techno v1.0
         </p>
       </div>
     </aside>

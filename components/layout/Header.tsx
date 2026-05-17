@@ -23,7 +23,7 @@ export function Header({ alertesStock }: { alertesStock: number }) {
 
   const title = Object.entries(pageTitles)
     .sort((a, b) => b[0].length - a[0].length)
-    .find(([key]) => pathname.startsWith(key))?.[1] ?? "Salon Facture";
+    .find(([key]) => pathname.startsWith(key))?.[1] ?? "Walima Techno";
 
   return (
     <header className="flex h-16 items-center justify-between border-b bg-white px-6 shadow-sm">
