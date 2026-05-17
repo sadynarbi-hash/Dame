@@ -48,6 +48,34 @@ export async function ajusterQuantite(id: string, delta: number) {
   return { success: true };
 }
 
+export async function entreeStockService(serviceId: string, quantite: number) {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: "Non authentifié" };
+
+  const { data: service } = await supabase.from("services").select("nom, stock_id").eq("id", serviceId).single();
+  if (!service) return { error: "Article introuvable" };
+
+  if (service.stock_id) {
+    const { data: stockItem } = await supabase.from("stock").select("quantite").eq("id", service.stock_id).single();
+    if (!stockItem) return { error: "Stock introuvable" };
+    const { error } = await supabase.from("stock").update({ quantite: stockItem.quantite + quantite }).eq("id", service.stock_id);
+    if (error) return { error: error.message };
+  } else {
+    const { data: newStock, error: errStock } = await supabase.from("stock").insert({
+      user_id: user.id, nom: service.nom, categorie: "Article",
+      quantite, unite: "unité", seuil_alerte: 3, prix_achat: 0,
+    }).select("id").single();
+    if (errStock || !newStock) return { error: errStock?.message ?? "Erreur création stock" };
+    const { error: errLink } = await supabase.from("services").update({ stock_id: newStock.id }).eq("id", serviceId);
+    if (errLink) return { error: errLink.message };
+  }
+
+  revalidatePath("/stock");
+  revalidatePath("/services");
+  return { success: true };
+}
+
 export async function deleteArticleStock(id: string) {
   const supabase = createClient();
   const { error } = await supabase.from("stock").delete().eq("id", id);

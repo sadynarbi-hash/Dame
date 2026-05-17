@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { updateArticleStock, deleteArticleStock, ajusterQuantite } from "@/lib/actions/stock";
+import { updateArticleStock, deleteArticleStock, ajusterQuantite, entreeStockService } from "@/lib/actions/stock";
 import { formatFCFA } from "@/lib/utils/formatters";
 import type { Database } from "@/types/supabase";
 
@@ -17,7 +17,7 @@ interface StockForm { nom: string; reference: string; categorie: string; quantit
 const emptyForm: StockForm = { nom: "", reference: "", categorie: "", quantite: 0, unite: "unité", seuilAlerte: 3, prixAchat: 0, fournisseur: "" };
 const UNITES = ["unité", "litre", "kg", "flacon", "boîte"];
 
-type ArticleService = { id: string; nom: string; stock_id: string };
+type ArticleService = { id: string; nom: string; stock_id: string | null };
 
 export function StockClient({ initialStock, articles }: { initialStock: StockRow[]; articles: ArticleService[] }) {
   const [stock, setStock] = useState(initialStock);
@@ -133,7 +133,7 @@ export function StockClient({ initialStock, articles }: { initialStock: StockRow
             <div className="space-y-2">
               <Label>Article *</Label>
               {articles.length === 0 ? (
-                <p className="text-sm text-muted-foreground rounded-md border p-3">Aucun article lié à un stock. Créez un article dans <strong>Services</strong> et associez-lui un stock.</p>
+                <p className="text-sm text-muted-foreground rounded-md border p-3">Aucun article trouvé. Créez d&apos;abord un article dans l&apos;onglet <strong>Services</strong>.</p>
               ) : (
                 <Select value={entreeArticleId} onValueChange={setEntreeArticleId}>
                   <SelectTrigger><SelectValue placeholder="Sélectionner un article…" /></SelectTrigger>
@@ -142,7 +142,7 @@ export function StockClient({ initialStock, articles }: { initialStock: StockRow
                       const stockItem = stock.find(s => s.id === a.stock_id);
                       return (
                         <SelectItem key={a.id} value={a.id}>
-                          {a.nom}{stockItem ? ` — ${stockItem.quantite} ${stockItem.unite}` : ""}
+                          {a.nom}{stockItem ? ` — stock actuel : ${stockItem.quantite} ${stockItem.unite}` : " — nouveau"}
                         </SelectItem>
                       );
                     })}
@@ -160,12 +160,9 @@ export function StockClient({ initialStock, articles }: { initialStock: StockRow
             <Button
               disabled={!entreeArticleId || entreeQte <= 0 || isPending || articles.length === 0}
               onClick={() => {
-                const article = articles.find(a => a.id === entreeArticleId);
-                if (!article) return;
                 startTransition(async () => {
-                  await ajusterQuantite(article.stock_id, entreeQte);
-                  setStock(prev => prev.map(s => s.id === article.stock_id ? { ...s, quantite: s.quantite + entreeQte } : s));
-                  setEntreeOpen(false);
+                  await entreeStockService(entreeArticleId, entreeQte);
+                  window.location.reload();
                 });
               }}
             >
