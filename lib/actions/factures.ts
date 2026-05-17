@@ -57,8 +57,15 @@ export async function createFacture(data: {
   const { error: lignesError } = await supabase.from("lignes_facture").insert(lignes);
   if (lignesError) return { error: lignesError.message };
 
-  // Mettre à jour le compteur client
-  await supabase.rpc("increment_client_factures", { p_client_id: data.clientId }).maybeSingle();
+  // Mettre à jour total_depense, nb_factures et derniere_visite
+  const { data: clientRow } = await supabase.from("clients").select("total_depense, nb_factures").eq("id", data.clientId).single();
+  if (clientRow) {
+    await supabase.from("clients").update({
+      total_depense: clientRow.total_depense + data.totalTTC,
+      nb_factures: clientRow.nb_factures + 1,
+      derniere_visite: data.dateEmission,
+    }).eq("id", data.clientId);
+  }
 
   // Décrémenter le stock + enregistrer mouvements de sortie
   const serviceIds = data.lignes.map(l => l.serviceId).filter(Boolean) as string[];

@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { StatutFactureBadge } from "@/components/shared/StatutBadge";
+import { FacturePdfButton } from "@/components/factures/FacturePdfButton";
 import { updateStatutFacture, deleteFacture } from "@/lib/actions/factures";
 import { formatFCFA, formatDateLong, TVA_TAUX } from "@/lib/utils/formatters";
 import type { StatutFacture } from "@/types";
@@ -80,12 +81,13 @@ export function FactureDetail({ facture, entreprise }: Props) {
           {facture.statut === "envoyee" && (
             <Button variant="outline" size="sm" disabled={isPending} onClick={() => handleStatut("en_retard")}><Clock className="h-4 w-4" />En retard</Button>
           )}
+          <FacturePdfButton facture={facture} />
           <Button variant="outline" size="sm" onClick={() => window.print()}><Printer className="h-4 w-4" />Imprimer</Button>
           <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" disabled={isPending} onClick={handleDelete}><Trash2 className="h-4 w-4" /></Button>
         </div>
       </div>
 
-      <Card className="overflow-hidden print:shadow-none print:border-0">
+      <Card id="facture-content" className="overflow-hidden print:shadow-none print:border-0">
         <CardContent className="p-8 space-y-8">
           <div className="flex justify-between items-start flex-wrap gap-6">
             <div>
