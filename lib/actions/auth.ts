@@ -17,11 +17,13 @@ export async function signIn(formData: FormData) {
 
 export async function signUp(formData: FormData) {
   const supabase = createClient();
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
   const { error } = await supabase.auth.signUp({
     email: formData.get("email") as string,
     password: formData.get("password") as string,
     options: {
       data: { nom_salon: formData.get("nom_salon") as string },
+      emailRedirectTo: `${appUrl}/auth/confirm`,
     },
   });
   if (error) return { error: error.message };

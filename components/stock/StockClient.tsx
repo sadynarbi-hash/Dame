@@ -24,6 +24,9 @@ export function StockClient({ initialStock }: { initialStock: StockRow[] }) {
   const [modalOpen, setModalOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<StockForm>(emptyForm);
+  const [entreeOpen, setEntreeOpen] = useState(false);
+  const [entreeArticleId, setEntreeArticleId] = useState<string>("");
+  const [entreeQte, setEntreeQte] = useState<number>(1);
   const [isPending, startTransition] = useTransition();
 
   const filtered = stock.filter((a) => {
@@ -75,7 +78,10 @@ export function StockClient({ initialStock }: { initialStock: StockRow[] }) {
             <AlertTriangle className="h-3.5 w-3.5" />Alertes
           </button>
         </div>
-        <Button onClick={() => { setForm(emptyForm); setEditId(null); setModalOpen(true); }}><Plus className="h-4 w-4" />Ajouter</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => { setEntreeArticleId(""); setEntreeQte(1); setEntreeOpen(true); }}>Entrée de stock</Button>
+          <Button onClick={() => { setForm(emptyForm); setEditId(null); setModalOpen(true); }}><Plus className="h-4 w-4" />Nouvel article</Button>
+        </div>
       </div>
 
       <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
@@ -125,6 +131,46 @@ export function StockClient({ initialStock }: { initialStock: StockRow[] }) {
           </tbody>
         </table>
       </div>
+
+      <Dialog open={entreeOpen} onOpenChange={setEntreeOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader><DialogTitle>Entrée de stock</DialogTitle></DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Article *</Label>
+              <Select value={entreeArticleId} onValueChange={setEntreeArticleId}>
+                <SelectTrigger><SelectValue placeholder="Sélectionner un article…" /></SelectTrigger>
+                <SelectContent>
+                  {stock.map(a => (
+                    <SelectItem key={a.id} value={a.id}>
+                      {a.nom} — {a.quantite} {a.unite}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Quantité à ajouter *</Label>
+              <Input type="number" min={1} value={entreeQte} onChange={(e) => setEntreeQte(Number(e.target.value))} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEntreeOpen(false)}>Annuler</Button>
+            <Button
+              disabled={!entreeArticleId || entreeQte <= 0 || isPending}
+              onClick={() => {
+                startTransition(async () => {
+                  await ajusterQuantite(entreeArticleId, entreeQte);
+                  setStock(prev => prev.map(a => a.id === entreeArticleId ? { ...a, quantite: a.quantite + entreeQte } : a));
+                  setEntreeOpen(false);
+                });
+              }}
+            >
+              Valider
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent className="sm:max-w-md">
