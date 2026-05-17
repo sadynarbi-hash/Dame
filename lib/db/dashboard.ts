@@ -9,12 +9,16 @@ export async function getStatsDashboard() {
     { data: rdv },
     { data: charges },
     { data: stock },
+    { data: lignes },
+    { data: topClientsData },
   ] = await Promise.all([
     supabase.from("factures").select("statut, total_ttc, date_paiement"),
     supabase.from("clients").select("id"),
     supabase.from("rendez_vous").select("date, statut"),
     supabase.from("charges").select("montant, mois, annee"),
     supabase.from("stock").select("quantite, seuil_alerte"),
+    supabase.from("lignes_facture").select("designation, quantite, total_ttc"),
+    supabase.from("clients").select("id, prenom, nom, total_depense, nb_factures").order("total_depense", { ascending: false }).limit(5),
   ]);
 
   const f = factures ?? [];
@@ -51,6 +55,17 @@ export async function getStatsDashboard() {
     return { mois: moisLabels[m - 1], revenus, charges: chargesMois };
   });
 
+  // Top services : agrégation par désignation
+  const servicesMap = new Map<string, { totalVendu: number; totalCA: number }>();
+  for (const l of lignes ?? []) {
+    const existing = servicesMap.get(l.designation) ?? { totalVendu: 0, totalCA: 0 };
+    servicesMap.set(l.designation, { totalVendu: existing.totalVendu + l.quantite, totalCA: existing.totalCA + l.total_ttc });
+  }
+  const topServices = Array.from(servicesMap.entries())
+    .map(([designation, v]) => ({ designation, ...v }))
+    .sort((a, b) => b.totalVendu - a.totalVendu)
+    .slice(0, 5);
+
   return {
     totalFactures: f.length,
     montantTotal: f.reduce((s, x) => s + x.total_ttc, 0),
@@ -61,5 +76,7 @@ export async function getStatsDashboard() {
     nbRendezVousSemaine: nbRdvSemaine,
     alertesStock: (stock ?? []).filter((a) => a.quantite <= a.seuil_alerte).length,
     evolutionMensuelle,
+    topServices,
+    topClients: topClientsData ?? [],
   };
 }

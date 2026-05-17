@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FileText, Users, DollarSign, Clock, TrendingUp, Calendar, AlertTriangle, Plus } from "lucide-react";
+import { FileText, Users, DollarSign, Clock, TrendingUp, Calendar, AlertTriangle, Plus, Trophy, Star } from "lucide-react";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { RevenueChart } from "@/components/dashboard/RevenueChart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -76,6 +76,70 @@ export default async function DashboardPage() {
                 </div>
               </Link>
             ))}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Services les plus vendus */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <CardTitle className="text-base flex items-center gap-2"><Trophy className="h-4 w-4 text-yellow-500" />Services les plus vendus</CardTitle>
+            <Button variant="ghost" size="sm" asChild><Link href="/services">Voir tout</Link></Button>
+          </CardHeader>
+          <CardContent>
+            {stats.topServices.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-6">Aucune vente enregistrée</p>
+            ) : (
+              <div className="space-y-3">
+                {stats.topServices.map((s, i) => {
+                  const max = stats.topServices[0].totalVendu;
+                  const pct = Math.round((s.totalVendu / max) * 100);
+                  return (
+                    <div key={s.designation} className="space-y-1">
+                      <div className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className={`font-bold text-xs w-5 shrink-0 ${i === 0 ? "text-yellow-500" : i === 1 ? "text-gray-400" : i === 2 ? "text-orange-400" : "text-muted-foreground"}`}>#{i + 1}</span>
+                          <span className="truncate font-medium">{s.designation}</span>
+                        </div>
+                        <span className="text-muted-foreground shrink-0 ml-2">{s.totalVendu} vendu(s)</span>
+                      </div>
+                      <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                        <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Meilleurs clients */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <CardTitle className="text-base flex items-center gap-2"><Star className="h-4 w-4 text-yellow-500" />Meilleurs clients</CardTitle>
+            <Button variant="ghost" size="sm" asChild><Link href="/clients">Voir tout</Link></Button>
+          </CardHeader>
+          <CardContent>
+            {stats.topClients.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-6">Aucun client enregistré</p>
+            ) : (
+              <div className="space-y-3">
+                {stats.topClients.map((c, i) => (
+                  <div key={c.id} className="flex items-center gap-3">
+                    <div className={`flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold shrink-0 ${i === 0 ? "bg-yellow-100 text-yellow-700" : i === 1 ? "bg-gray-100 text-gray-600" : i === 2 ? "bg-orange-100 text-orange-600" : "bg-muted text-muted-foreground"}`}>
+                      {i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `#${i + 1}`}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{c.prenom} {c.nom}</p>
+                      <p className="text-xs text-muted-foreground">{c.nb_factures} facture(s)</p>
+                    </div>
+                    <span className="text-sm font-semibold text-primary shrink-0">{formatFCFA(c.total_depense)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
