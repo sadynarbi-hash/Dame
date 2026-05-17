@@ -105,21 +105,48 @@ export type Database = {
         };
         Relationships: [];
       };
+      agents: {
+        Row: { id: string; user_id: string; nom: string; actif: boolean; created_at: string; };
+        Insert: { id?: string; user_id: string; nom: string; actif?: boolean; created_at?: string; };
+        Update: { id?: string; user_id?: string; nom?: string; actif?: boolean; created_at?: string; };
+        Relationships: [];
+      };
+      mouvements_stock: {
+        Row: {
+          id: string; user_id: string; stock_id: string | null; article_nom: string;
+          type: "entree" | "sortie"; quantite: number; prix_unitaire: number;
+          date: string; notes: string | null; facture_id: string | null;
+        };
+        Insert: {
+          id?: string; user_id: string; stock_id?: string | null; article_nom: string;
+          type: "entree" | "sortie"; quantite: number; prix_unitaire?: number;
+          date?: string; notes?: string | null; facture_id?: string | null;
+        };
+        Update: {
+          id?: string; user_id?: string; stock_id?: string | null; article_nom?: string;
+          type?: "entree" | "sortie"; quantite?: number; prix_unitaire?: number;
+          date?: string; notes?: string | null; facture_id?: string | null;
+        };
+        Relationships: [];
+      };
       lignes_facture: {
         Row: {
           id: string; facture_id: string; service_id: string | null;
           designation: string; quantite: number; prix_unitaire_ht: number;
           tva: number; total_ht: number; total_ttc: number; ordre: number;
+          agent_id: string | null;
         };
         Insert: {
           id?: string; facture_id: string; service_id?: string | null;
           designation: string; quantite: number; prix_unitaire_ht: number;
           tva: number; total_ht: number; total_ttc: number; ordre: number;
+          agent_id?: string | null;
         };
         Update: {
           id?: string; facture_id?: string; service_id?: string | null;
           designation?: string; quantite?: number; prix_unitaire_ht?: number;
           tva?: number; total_ht?: number; total_ttc?: number; ordre?: number;
+          agent_id?: string | null;
         };
         Relationships: [];
       };

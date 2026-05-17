@@ -7,7 +7,7 @@ import type { StatutFacture } from "@/types";
 
 export async function createFacture(data: {
   clientId: string; dateEmission: string; dateEcheance: string;
-  lignes: { serviceId?: string; designation: string; quantite: number; prixUnitaireHT: number; tva: number; totalHT: number; totalTTC: number; }[];
+  lignes: { serviceId?: string; agentId?: string; designation: string; quantite: number; prixUnitaireHT: number; tva: number; totalHT: number; totalTTC: number; }[];
   sousTotal: number; montantTva: number; totalTTC: number;
   notes?: string; conditions?: string;
 }) {
@@ -44,6 +44,7 @@ export async function createFacture(data: {
   const lignes = data.lignes.map((l, i) => ({
     facture_id: facture.id,
     service_id: l.serviceId ?? null,
+    agent_id: l.agentId ?? null,
     designation: l.designation,
     quantite: l.quantite,
     prix_unitaire_ht: l.prixUnitaireHT,
@@ -59,10 +60,10 @@ export async function createFacture(data: {
   // Mettre à jour le compteur client
   await supabase.rpc("increment_client_factures", { p_client_id: data.clientId }).maybeSingle();
 
-  // Décrémenter le stock pour les articles
+  // Décrémenter le stock + enregistrer mouvements de sortie
   const serviceIds = data.lignes.map(l => l.serviceId).filter(Boolean) as string[];
   if (serviceIds.length > 0) {
-    const { data: svcs } = await supabase.from("services").select("id, type, stock_id").in("id", serviceIds);
+    const { data: svcs } = await supabase.from("services").select("id, type, stock_id, nom").in("id", serviceIds);
     const articleSvcs = (svcs ?? []).filter(s => s.type === "article" && s.stock_id);
     for (const svc of articleSvcs) {
       const ligne = data.lignes.find(l => l.serviceId === svc.id);
@@ -70,6 +71,15 @@ export async function createFacture(data: {
       const { data: stockItem } = await supabase.from("stock").select("quantite").eq("id", svc.stock_id).single();
       if (stockItem) {
         await supabase.from("stock").update({ quantite: Math.max(0, stockItem.quantite - ligne.quantite) }).eq("id", svc.stock_id);
+        await supabase.from("mouvements_stock").insert({
+          user_id: user.id,
+          stock_id: svc.stock_id,
+          article_nom: svc.nom,
+          type: "sortie",
+          quantite: ligne.quantite,
+          prix_unitaire: ligne.prixUnitaireHT,
+          facture_id: facture.id,
+        });
       }
     }
     revalidatePath("/stock");

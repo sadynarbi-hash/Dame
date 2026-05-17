@@ -27,6 +27,7 @@ export async function getStatsDashboard() {
   const payees = f.filter((x) => x.statut === "payee");
   const enAttente = f.filter((x) => x.statut === "envoyee");
   const enRetard = f.filter((x) => x.statut === "en_retard");
+  const emises = f.filter((x) => x.statut !== "brouillon"); // CA global = hors brouillon
 
   // Rendez-vous cette semaine
   const aujourd_hui = new Date();
@@ -55,7 +56,7 @@ export async function getStatsDashboard() {
     return { mois: moisLabels[m - 1], revenus, charges: chargesMois };
   });
 
-  // Top services : agrégation par désignation
+  // CA par service : agrégation par désignation, triée par CA
   const servicesMap = new Map<string, { totalVendu: number; totalCA: number }>();
   for (const l of lignes ?? []) {
     const existing = servicesMap.get(l.designation) ?? { totalVendu: 0, totalCA: 0 };
@@ -63,12 +64,15 @@ export async function getStatsDashboard() {
   }
   const topServices = Array.from(servicesMap.entries())
     .map(([designation, v]) => ({ designation, ...v }))
-    .sort((a, b) => b.totalVendu - a.totalVendu)
+    .sort((a, b) => b.totalCA - a.totalCA)
     .slice(0, 5);
 
   return {
     totalFactures: f.length,
     montantTotal: f.reduce((s, x) => s + x.total_ttc, 0),
+    caGlobal: emises.reduce((s, x) => s + x.total_ttc, 0),
+    caEncaisse: payees.reduce((s, x) => s + x.total_ttc, 0),
+    caNonRecouvre: [...enAttente, ...enRetard].reduce((s, x) => s + x.total_ttc, 0),
     montantPaye: payees.reduce((s, x) => s + x.total_ttc, 0),
     montantEnAttente: enAttente.reduce((s, x) => s + x.total_ttc, 0),
     montantEnRetard: enRetard.reduce((s, x) => s + x.total_ttc, 0),

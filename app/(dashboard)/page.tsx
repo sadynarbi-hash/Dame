@@ -38,11 +38,12 @@ export default async function DashboardPage() {
         </Button>
       </div>
 
+      {/* CA principal */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard title="Total factures" value={String(stats.totalFactures)} subtitle={`${formatFCFA(stats.montantTotal)} au total`} icon={FileText} color="purple" />
-        <StatCard title="Montant encaissé" value={formatFCFA(stats.montantPaye)} subtitle="Factures payées" icon={DollarSign} color="green" trend={{ value: "ce mois", positive: true }} />
-        <StatCard title="En attente" value={formatFCFA(stats.montantEnAttente)} subtitle="À encaisser" icon={Clock} color="yellow" />
-        <StatCard title="En retard" value={formatFCFA(stats.montantEnRetard)} subtitle="À relancer" icon={TrendingUp} color="red" />
+        <StatCard title="CA Global" value={formatFCFA(stats.caGlobal)} subtitle={`${stats.totalFactures} factures émises`} icon={TrendingUp} color="purple" />
+        <StatCard title="CA Encaissé" value={formatFCFA(stats.caEncaisse)} subtitle="Factures payées" icon={DollarSign} color="green" trend={{ value: "encaissé", positive: true }} />
+        <StatCard title="CA Non recouvré" value={formatFCFA(stats.caNonRecouvre)} subtitle="En attente + en retard" icon={Clock} color="red" />
+        <StatCard title="En retard" value={formatFCFA(stats.montantEnRetard)} subtitle="À relancer en priorité" icon={AlertTriangle} color="yellow" />
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -81,10 +82,10 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Services les plus vendus */}
+        {/* CA par service */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-3">
-            <CardTitle className="text-base flex items-center gap-2"><Trophy className="h-4 w-4 text-yellow-500" />Services les plus vendus</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2"><Trophy className="h-4 w-4 text-yellow-500" />CA par service</CardTitle>
             <Button variant="ghost" size="sm" asChild><Link href="/services">Voir tout</Link></Button>
           </CardHeader>
           <CardContent>
@@ -93,16 +94,19 @@ export default async function DashboardPage() {
             ) : (
               <div className="space-y-3">
                 {stats.topServices.map((s, i) => {
-                  const max = stats.topServices[0].totalVendu;
-                  const pct = Math.round((s.totalVendu / max) * 100);
+                  const maxCA = stats.topServices[0].totalCA;
+                  const pct = Math.round((s.totalCA / maxCA) * 100);
                   return (
                     <div key={s.designation} className="space-y-1">
                       <div className="flex items-center justify-between text-sm">
                         <div className="flex items-center gap-2 min-w-0">
                           <span className={`font-bold text-xs w-5 shrink-0 ${i === 0 ? "text-yellow-500" : i === 1 ? "text-gray-400" : i === 2 ? "text-orange-400" : "text-muted-foreground"}`}>#{i + 1}</span>
-                          <span className="truncate font-medium">{s.designation}</span>
+                          <div className="min-w-0">
+                            <p className="truncate font-medium">{s.designation}</p>
+                            <p className="text-xs text-muted-foreground">{s.totalVendu} vendu(s)</p>
+                          </div>
                         </div>
-                        <span className="text-muted-foreground shrink-0 ml-2">{s.totalVendu} vendu(s)</span>
+                        <span className="font-semibold text-primary shrink-0 ml-2">{formatFCFA(s.totalCA)}</span>
                       </div>
                       <div className="h-1.5 rounded-full bg-muted overflow-hidden">
                         <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />

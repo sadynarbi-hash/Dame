@@ -29,6 +29,7 @@ export function StockClient({ initialStock, articles }: { initialStock: StockRow
   const [entreeOpen, setEntreeOpen] = useState(false);
   const [entreeArticleId, setEntreeArticleId] = useState<string>("");
   const [entreeQte, setEntreeQte] = useState<number>(1);
+  const [entreePrixAchat, setEntreePrixAchat] = useState<number>(0);
   const [isPending, startTransition] = useTransition();
 
   const filtered = stock.filter((a) => {
@@ -75,7 +76,7 @@ export function StockClient({ initialStock, articles }: { initialStock: StockRow
             <AlertTriangle className="h-3.5 w-3.5" />Alertes
           </button>
         </div>
-        <Button onClick={() => { setEntreeArticleId(""); setEntreeQte(1); setEntreeOpen(true); }}><Plus className="h-4 w-4" />Entrée en stock</Button>
+        <Button onClick={() => { setEntreeArticleId(""); setEntreeQte(1); setEntreePrixAchat(0); setEntreeOpen(true); }}><Plus className="h-4 w-4" />Entrée en stock</Button>
       </div>
 
       <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
@@ -154,6 +155,10 @@ export function StockClient({ initialStock, articles }: { initialStock: StockRow
               <Label>Quantité à ajouter *</Label>
               <Input type="number" min={1} value={entreeQte} onChange={(e) => setEntreeQte(Number(e.target.value))} />
             </div>
+            <div className="space-y-2">
+              <Label>Prix d&apos;achat unitaire (FCFA)</Label>
+              <Input type="number" min={0} value={entreePrixAchat} onChange={(e) => setEntreePrixAchat(Number(e.target.value))} placeholder="0" />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEntreeOpen(false)}>Annuler</Button>
@@ -161,7 +166,7 @@ export function StockClient({ initialStock, articles }: { initialStock: StockRow
               disabled={!entreeArticleId || entreeQte <= 0 || isPending || articles.length === 0}
               onClick={() => {
                 startTransition(async () => {
-                  await entreeStockService(entreeArticleId, entreeQte);
+                  await entreeStockService(entreeArticleId, entreeQte, entreePrixAchat || undefined);
                   window.location.reload();
                 });
               }}

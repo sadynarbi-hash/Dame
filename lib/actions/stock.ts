@@ -48,7 +48,7 @@ export async function ajusterQuantite(id: string, delta: number) {
   return { success: true };
 }
 
-export async function entreeStockService(serviceId: string, quantite: number) {
+export async function entreeStockService(serviceId: string, quantite: number, prixAchat?: number) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return { error: "Non authentifié" };
@@ -56,20 +56,36 @@ export async function entreeStockService(serviceId: string, quantite: number) {
   const { data: service } = await supabase.from("services").select("nom, stock_id").eq("id", serviceId).single();
   if (!service) return { error: "Article introuvable" };
 
+  let stockId: string;
+
   if (service.stock_id) {
     const { data: stockItem } = await supabase.from("stock").select("quantite").eq("id", service.stock_id).single();
     if (!stockItem) return { error: "Stock introuvable" };
-    const { error } = await supabase.from("stock").update({ quantite: stockItem.quantite + quantite }).eq("id", service.stock_id);
+    const update: Record<string, unknown> = { quantite: stockItem.quantite + quantite };
+    if (prixAchat !== undefined && prixAchat >= 0) update.prix_achat = prixAchat;
+    const { error } = await supabase.from("stock").update(update).eq("id", service.stock_id);
     if (error) return { error: error.message };
+    stockId = service.stock_id;
   } else {
     const { data: newStock, error: errStock } = await supabase.from("stock").insert({
       user_id: user.id, nom: service.nom, categorie: "Article",
-      quantite, unite: "unité", seuil_alerte: 3, prix_achat: 0,
+      quantite, unite: "unité", seuil_alerte: 3, prix_achat: prixAchat ?? 0,
     }).select("id").single();
     if (errStock || !newStock) return { error: errStock?.message ?? "Erreur création stock" };
     const { error: errLink } = await supabase.from("services").update({ stock_id: newStock.id }).eq("id", serviceId);
     if (errLink) return { error: errLink.message };
+    stockId = newStock.id;
   }
+
+  // Enregistrer le mouvement d'entrée
+  await supabase.from("mouvements_stock").insert({
+    user_id: user.id,
+    stock_id: stockId,
+    article_nom: service.nom,
+    type: "entree",
+    quantite,
+    prix_unitaire: prixAchat ?? 0,
+  });
 
   revalidatePath("/stock");
   revalidatePath("/services");

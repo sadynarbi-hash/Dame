@@ -18,9 +18,11 @@ import { formatFCFA, calculerTTC, calculerMontantTva, TVA_TAUX } from "@/lib/uti
 
 type ClientRow = { id: string; nom: string; prenom: string; telephone: string | null };
 type ServiceRow = { id: string; nom: string; prix_ht: number; prix_ttc: number; tva: number; type: string };
+type AgentRow = { id: string; nom: string };
 
 const ligneSchema = z.object({
   serviceId: z.string().optional(),
+  agentId: z.string().optional(),
   designation: z.string().min(1, "Requis"),
   quantite: z.number().min(1),
   prixUnitaireHT: z.number().min(0),
@@ -39,7 +41,7 @@ const factureSchema = z.object({
 type FactureForm = z.infer<typeof factureSchema>;
 
 function newLigne(): FactureForm["lignes"][0] {
-  return { designation: "", quantite: 1, prixUnitaireHT: 0, tva: TVA_TAUX };
+  return { designation: "", quantite: 1, prixUnitaireHT: 0, tva: TVA_TAUX, agentId: undefined };
 }
 
 function ServiceCombobox({ services, onSelect }: { services: ServiceRow[]; onSelect: (s: ServiceRow) => void }) {
@@ -101,7 +103,7 @@ function ServiceCombobox({ services, onSelect }: { services: ServiceRow[]; onSel
   );
 }
 
-export function NouvelleFactureForm({ clients, services }: { clients: ClientRow[]; services: ServiceRow[] }) {
+export function NouvelleFactureForm({ clients, services, agents }: { clients: ClientRow[]; services: ServiceRow[]; agents: AgentRow[] }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [serverError, setServerError] = useState<string | null>(null);
@@ -134,6 +136,7 @@ export function NouvelleFactureForm({ clients, services }: { clients: ClientRow[
     const { sousTotal, montantTva, totalTTC } = getTotaux();
     const lignes = data.lignes.map((l) => ({
       serviceId: l.serviceId,
+      agentId: l.agentId,
       designation: l.designation,
       quantite: l.quantite,
       prixUnitaireHT: l.prixUnitaireHT,
@@ -196,10 +199,11 @@ export function NouvelleFactureForm({ clients, services }: { clients: ClientRow[
           <CardContent className="space-y-4">
             <div className="hidden sm:grid grid-cols-12 gap-2 text-xs font-medium text-muted-foreground px-1">
               <div className="col-span-4">Désignation</div>
-              <div className="col-span-2">Qté</div>
+              <div className="col-span-2">Agent</div>
+              <div className="col-span-1">Qté</div>
               <div className="col-span-2">Prix HT</div>
               <div className="col-span-1">TVA %</div>
-              <div className="col-span-2 text-right">Total TTC</div>
+              <div className="col-span-1 text-right">Total TTC</div>
               <div className="col-span-1"></div>
             </div>
 
@@ -214,11 +218,20 @@ export function NouvelleFactureForm({ clients, services }: { clients: ClientRow[
                     <ServiceCombobox services={services} onSelect={(s) => handleServiceSelect(index, s.id)} />
                     <Input placeholder="Désignation" className="h-8 text-sm" {...register(`lignes.${index}.designation`)} />
                   </div>
-                  <div className="col-span-4 sm:col-span-2"><Input type="number" min={1} className="h-8 text-sm" {...register(`lignes.${index}.quantite`, { valueAsNumber: true })} /></div>
+                  <div className="col-span-6 sm:col-span-2">
+                    <Select value={ligne?.agentId ?? "none"} onValueChange={(v) => setValue(`lignes.${index}.agentId`, v === "none" ? undefined : v)}>
+                      <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Agent…" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">— Aucun —</SelectItem>
+                        {agents.map(a => <SelectItem key={a.id} value={a.id}>{a.nom}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="col-span-2 sm:col-span-1"><Input type="number" min={1} className="h-8 text-sm" {...register(`lignes.${index}.quantite`, { valueAsNumber: true })} /></div>
                   <div className="col-span-4 sm:col-span-2"><Input type="number" min={0} className="h-8 text-sm" {...register(`lignes.${index}.prixUnitaireHT`, { valueAsNumber: true })} /></div>
                   <div className="col-span-2 sm:col-span-1"><Input type="number" min={0} max={100} className="h-8 text-sm" {...register(`lignes.${index}.tva`, { valueAsNumber: true })} /></div>
-                  <div className="col-span-2 sm:col-span-2 flex items-center justify-end"><span className="text-sm font-semibold">{formatFCFA(lineTTC)}</span></div>
-                  <div className="col-span-12 sm:col-span-1 flex justify-end">
+                  <div className="col-span-2 sm:col-span-1 flex items-center justify-end"><span className="text-sm font-semibold">{formatFCFA(lineTTC)}</span></div>
+                  <div className="col-span-2 sm:col-span-1 flex justify-end">
                     {fields.length > 1 && <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => remove(index)}><Trash2 className="h-3.5 w-3.5" /></Button>}
                   </div>
                 </div>

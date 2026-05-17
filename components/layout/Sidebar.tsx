@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, FileText, Users, Scissors,
   Package, Calendar, TrendingDown, Settings, ChevronRight, X,
+  UserCheck, BarChart2,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 
@@ -13,8 +14,10 @@ const navItems = [
   { href: "/", label: "Tableau de bord", icon: LayoutDashboard },
   { href: "/factures", label: "Factures", icon: FileText },
   { href: "/clients", label: "Clients", icon: Users },
+  { href: "/agents", label: "Agents", icon: UserCheck },
   { href: "/services", label: "Services", icon: Scissors },
   { href: "/stock", label: "Stock", icon: Package },
+  { href: "/stock/mouvements", label: "Mouvements stock", icon: BarChart2 },
   { href: "/rendez-vous", label: "Rendez-vous", icon: Calendar },
   { href: "/charges", label: "Charges", icon: TrendingDown },
   { href: "/parametres", label: "Paramètres", icon: Settings },
