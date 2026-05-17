@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { createArticleStock, updateArticleStock, deleteArticleStock, ajusterQuantite } from "@/lib/actions/stock";
+import { updateArticleStock, deleteArticleStock, ajusterQuantite } from "@/lib/actions/stock";
 import { formatFCFA } from "@/lib/utils/formatters";
 import type { Database } from "@/types/supabase";
 
@@ -23,9 +23,9 @@ export function StockClient({ initialStock, articles }: { initialStock: StockRow
   const [stock, setStock] = useState(initialStock);
   const [search, setSearch] = useState("");
   const [filtreAlertes, setFiltreAlertes] = useState(false);
-  const [modalOpen, setModalOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<StockForm>(emptyForm);
+  const [modalOpen, setModalOpen] = useState(false);
   const [entreeOpen, setEntreeOpen] = useState(false);
   const [entreeArticleId, setEntreeArticleId] = useState<string>("");
   const [entreeQte, setEntreeQte] = useState<number>(1);
@@ -43,15 +43,10 @@ export function StockClient({ initialStock, articles }: { initialStock: StockRow
   };
 
   const handleSave = () => {
-    if (!form.nom || !form.categorie) return;
+    if (!editId || !form.nom || !form.categorie) return;
     startTransition(async () => {
-      if (editId) {
-        await updateArticleStock(editId, form);
-        setStock(prev => prev.map(a => a.id === editId ? { ...a, nom: form.nom, reference: form.reference, categorie: form.categorie, quantite: form.quantite, unite: form.unite as StockRow["unite"], seuil_alerte: form.seuilAlerte, prix_achat: form.prixAchat, fournisseur: form.fournisseur } : a));
-      } else {
-        await createArticleStock(form);
-        window.location.reload(); return;
-      }
+      await updateArticleStock(editId, form);
+      setStock(prev => prev.map(a => a.id === editId ? { ...a, nom: form.nom, reference: form.reference, categorie: form.categorie, quantite: form.quantite, unite: form.unite as StockRow["unite"], seuil_alerte: form.seuilAlerte, prix_achat: form.prixAchat, fournisseur: form.fournisseur } : a));
       setModalOpen(false);
     });
   };
@@ -80,10 +75,7 @@ export function StockClient({ initialStock, articles }: { initialStock: StockRow
             <AlertTriangle className="h-3.5 w-3.5" />Alertes
           </button>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => { setEntreeArticleId(""); setEntreeQte(1); setEntreeOpen(true); }}>Entrée de stock</Button>
-          <Button onClick={() => { setForm(emptyForm); setEditId(null); setModalOpen(true); }}><Plus className="h-4 w-4" />Nouvel article</Button>
-        </div>
+        <Button onClick={() => { setEntreeArticleId(""); setEntreeQte(1); setEntreeOpen(true); }}><Plus className="h-4 w-4" />Entrée en stock</Button>
       </div>
 
       <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
@@ -136,7 +128,7 @@ export function StockClient({ initialStock, articles }: { initialStock: StockRow
 
       <Dialog open={entreeOpen} onOpenChange={setEntreeOpen}>
         <DialogContent className="sm:max-w-sm">
-          <DialogHeader><DialogTitle>Entrée de stock</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Entrée en stock</DialogTitle></DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>Article *</Label>
@@ -185,7 +177,7 @@ export function StockClient({ initialStock, articles }: { initialStock: StockRow
 
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent className="sm:max-w-md">
-          <DialogHeader><DialogTitle>{editId ? "Modifier" : "Nouvel article"}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Modifier l&apos;article</DialogTitle></DialogHeader>
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2 space-y-2"><Label>Nom *</Label><Input value={form.nom} onChange={(e) => setForm(f => ({ ...f, nom: e.target.value }))} /></div>
             <div className="space-y-2"><Label>Référence</Label><Input value={form.reference} onChange={(e) => setForm(f => ({ ...f, reference: e.target.value }))} /></div>
@@ -203,7 +195,7 @@ export function StockClient({ initialStock, articles }: { initialStock: StockRow
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setModalOpen(false)}>Annuler</Button>
-            <Button onClick={handleSave} disabled={!form.nom || !form.categorie || isPending}>{editId ? "Enregistrer" : "Ajouter"}</Button>
+            <Button onClick={handleSave} disabled={!form.nom || !form.categorie || isPending}>Enregistrer</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
