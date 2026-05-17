@@ -7,6 +7,7 @@ import type { StatutFacture } from "@/types";
 
 export async function createFacture(data: {
   clientId: string; dateEmission: string; dateEcheance: string;
+  modePaiement?: string;
   lignes: { serviceId?: string; agentId?: string; designation: string; quantite: number; prixUnitaireHT: number; tva: number; totalHT: number; totalTTC: number; }[];
   sousTotal: number; montantTva: number; totalTTC: number;
   notes?: string; conditions?: string;
@@ -34,6 +35,7 @@ export async function createFacture(data: {
       total_ttc: data.totalTTC,
       notes: data.notes,
       conditions: data.conditions,
+      mode_paiement: data.modePaiement ?? null,
     })
     .select()
     .single();
