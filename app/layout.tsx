@@ -10,13 +10,16 @@ export const metadata: Metadata = {
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
-    title: "Walima Techno",
+    statusBarStyle: "black-translucent",
+    title: "Walima",
+  },
+  icons: {
+    apple: "/icon-apple.png",
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#8B5CF6",
+  themeColor: "#8B2255",
   width: "device-width",
   initialScale: 1,
 };
