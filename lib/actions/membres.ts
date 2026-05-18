@@ -5,7 +5,14 @@ import { createClient } from "@/lib/supabase/server";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import type { Permissions } from "@/lib/auth/context";
 
+function serviceKeyAvailable() {
+  const k = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
+  return k.length > 30 && !k.startsWith("REMPLACER");
+}
+
 async function checkOwner() {
+  if (!serviceKeyAvailable()) throw new Error("Service role key non configurée");
+
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error("Non authentifié");
