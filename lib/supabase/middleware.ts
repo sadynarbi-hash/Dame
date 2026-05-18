@@ -25,6 +25,7 @@ export async function updateSession(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
   const isPublicRoute = pathname.startsWith("/connexion") || pathname.startsWith("/landing") || pathname.startsWith("/auth/") || pathname.startsWith("/prise-rdv/") || pathname.startsWith("/abonnement-expire");
+  const isAuthOnlyPublic = pathname.startsWith("/connexion") || pathname.startsWith("/landing") || pathname.startsWith("/auth/");
   const isProtectedRoute = !isPublicRoute && !pathname.startsWith("/api");
 
   if (!user && isProtectedRoute) {
@@ -33,7 +34,8 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (user && isPublicRoute) {
+  // Redirect logged-in users away from auth pages only (not prise-rdv or abonnement-expire)
+  if (user && isAuthOnlyPublic) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     return NextResponse.redirect(url);
