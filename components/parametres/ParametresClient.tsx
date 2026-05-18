@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useTransition, useRef } from "react";
-import { Save, Building2, Mail, Phone, Globe, FileText, Upload, X, Palette, Image } from "lucide-react";
+import { Save, Building2, Mail, Phone, Globe, FileText, Upload, X, Palette, Image, Users } from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -289,6 +290,19 @@ export function ParametresClient({ initialEntreprise }: { initialEntreprise: Ent
             <Label>Mentions légales (pied de facture)</Label>
             <Textarea value={form.mentionsLegales} onChange={(e) => setForm(f => ({ ...f, mentionsLegales: e.target.value }))} rows={3} />
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Gestion des utilisateurs */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2"><Users className="h-4 w-4" />Utilisateurs du salon</CardTitle>
+          <CardDescription>Ajoutez des membres à votre équipe et contrôlez leurs accès</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button variant="outline" asChild>
+            <Link href="/parametres/utilisateurs">Gérer les utilisateurs →</Link>
+          </Button>
         </CardContent>
       </Card>
 

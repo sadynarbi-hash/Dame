@@ -9,22 +9,32 @@ import {
   UserCheck, BarChart2,
 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import type { Permissions } from "@/lib/auth/context";
 
 const navItems = [
-  { href: "/", label: "Tableau de bord", icon: LayoutDashboard },
-  { href: "/factures", label: "Factures", icon: FileText },
-  { href: "/clients", label: "Clients", icon: Users },
-  { href: "/agents", label: "Agents", icon: UserCheck },
-  { href: "/services", label: "Services", icon: Scissors },
-  { href: "/stock", label: "Stock", icon: Package },
-  { href: "/stock/mouvements", label: "Mouvements stock", icon: BarChart2 },
-  { href: "/rendez-vous", label: "Rendez-vous", icon: Calendar },
-  { href: "/charges", label: "Charges", icon: TrendingDown },
-  { href: "/parametres", label: "Paramètres", icon: Settings },
+  { href: "/", label: "Tableau de bord", icon: LayoutDashboard, permKey: "dashboard" as keyof Permissions },
+  { href: "/factures", label: "Factures", icon: FileText, permKey: "factures" as keyof Permissions },
+  { href: "/clients", label: "Clients", icon: Users, permKey: "clients" as keyof Permissions },
+  { href: "/agents", label: "Agents", icon: UserCheck, permKey: "agents" as keyof Permissions },
+  { href: "/services", label: "Services", icon: Scissors, permKey: "services" as keyof Permissions },
+  { href: "/stock", label: "Stock", icon: Package, permKey: "stock" as keyof Permissions },
+  { href: "/stock/mouvements", label: "Mouvements stock", icon: BarChart2, permKey: "stock" as keyof Permissions },
+  { href: "/rendez-vous", label: "Rendez-vous", icon: Calendar, permKey: "rendez_vous" as keyof Permissions },
+  { href: "/charges", label: "Charges", icon: TrendingDown, permKey: "charges" as keyof Permissions },
+  { href: "/parametres", label: "Paramètres", icon: Settings, permKey: "parametres" as keyof Permissions },
 ];
 
-export function Sidebar({ nomSalon, alertesStock, logo, onClose }: { nomSalon: string; alertesStock: number; logo: string | null; onClose?: () => void }) {
+export function Sidebar({
+  nomSalon, alertesStock, logo, onClose, permissions,
+}: {
+  nomSalon: string; alertesStock: number; logo: string | null;
+  onClose?: () => void; permissions?: Permissions | null;
+}) {
   const pathname = usePathname();
+
+  const visibleItems = permissions
+    ? navItems.filter((item) => permissions[item.permKey])
+    : navItems;
 
   return (
     <aside className="flex h-full w-64 flex-col bg-sidebar text-sidebar-foreground shadow-xl lg:shadow-none">
@@ -50,7 +60,7 @@ export function Sidebar({ nomSalon, alertesStock, logo, onClose }: { nomSalon: s
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
-        {navItems.map(({ href, label, icon: Icon }) => {
+        {visibleItems.map(({ href, label, icon: Icon }) => {
           const isActive = pathname === href || (href !== "/" && pathname.startsWith(href + "/") && !navItems.some(n => n.href !== href && n.href.startsWith(href + "/") && pathname.startsWith(n.href)));
           const badge = href === "/stock" && alertesStock > 0 ? alertesStock : null;
 

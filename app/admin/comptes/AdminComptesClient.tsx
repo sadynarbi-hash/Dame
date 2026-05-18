@@ -1,0 +1,91 @@
+"use client";
+
+import { useTransition } from "react";
+import { setStatutCompte } from "@/lib/actions/admin";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { CheckCircle, Ban, Clock } from "lucide-react";
+
+type Compte = {
+  id: string; user_id: string; nom: string; email: string;
+  abonnement_statut: string | null; trial_ends_at: string | null; created_at: string;
+};
+
+function StatutBadge({ statut, trialEndsAt }: { statut: string | null; trialEndsAt: string | null }) {
+  const expireDate = trialEndsAt ? new Date(trialEndsAt) : null;
+  const estExpire = expireDate && expireDate < new Date();
+
+  if (statut === "actif") return <Badge className="bg-green-100 text-green-700">Actif</Badge>;
+  if (statut === "suspendu") return <Badge variant="destructive">Suspendu</Badge>;
+  if (statut === "trial") {
+    if (estExpire) return <Badge className="bg-red-100 text-red-700">Essai expiré</Badge>;
+    return <Badge className="bg-blue-100 text-blue-700">Essai — expire le {expireDate?.toLocaleDateString("fr-FR")}</Badge>;
+  }
+  return <Badge variant="secondary">{statut ?? "—"}</Badge>;
+}
+
+export function AdminComptesClient({ comptes }: { comptes: Compte[] }) {
+  const [isPending, startTransition] = useTransition();
+
+  const action = (userId: string, statut: "actif" | "suspendu" | "trial") => {
+    if (!confirm(`Confirmer : passer ce compte en "${statut}" ?`)) return;
+    startTransition(async () => { await setStatutCompte(userId, statut); });
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto p-6 space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold">Admin — Gestion des comptes</h1>
+        <p className="text-muted-foreground text-sm">{comptes.length} compte(s) enregistré(s)</p>
+      </div>
+
+      <div className="rounded-xl border bg-white overflow-hidden shadow-sm">
+        <table className="w-full text-sm">
+          <thead className="border-b bg-muted/50">
+            <tr>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Salon</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Email</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Statut</th>
+              <th className="px-4 py-3 text-left font-medium text-muted-foreground">Créé le</th>
+              <th className="px-4 py-3 text-center font-medium text-muted-foreground">Actions</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y">
+            {comptes.map((c) => (
+              <tr key={c.id} className="hover:bg-muted/20">
+                <td className="px-4 py-3 font-medium">{c.nom}</td>
+                <td className="px-4 py-3 text-muted-foreground">{c.email}</td>
+                <td className="px-4 py-3">
+                  <StatutBadge statut={c.abonnement_statut} trialEndsAt={c.trial_ends_at} />
+                </td>
+                <td className="px-4 py-3 text-muted-foreground">
+                  {new Date(c.created_at).toLocaleDateString("fr-FR")}
+                </td>
+                <td className="px-4 py-3">
+                  <div className="flex items-center justify-center gap-1">
+                    {c.abonnement_statut !== "actif" && (
+                      <Button size="sm" variant="outline" className="text-green-600 border-green-200 hover:bg-green-50 h-7 text-xs" disabled={isPending}
+                        onClick={() => action(c.user_id, "actif")}>
+                        <CheckCircle className="h-3 w-3" />Activer
+                      </Button>
+                    )}
+                    {c.abonnement_statut !== "suspendu" && (
+                      <Button size="sm" variant="outline" className="text-red-600 border-red-200 hover:bg-red-50 h-7 text-xs" disabled={isPending}
+                        onClick={() => action(c.user_id, "suspendu")}>
+                        <Ban className="h-3 w-3" />Suspendre
+                      </Button>
+                    )}
+                    <Button size="sm" variant="ghost" className="text-blue-600 h-7 text-xs" disabled={isPending}
+                      onClick={() => action(c.user_id, "trial")}>
+                      <Clock className="h-3 w-3" />+14j essai
+                    </Button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}

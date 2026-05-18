@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { getDataContext } from "@/lib/auth/context";
 import type { StatutFacture } from "@/types";
 
 export async function createFacture(data: {
@@ -12,19 +12,18 @@ export async function createFacture(data: {
   sousTotal: number; montantTva: number; totalTTC: number;
   notes?: string; conditions?: string;
 }) {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: "Non authentifié" };
+  const ctx = await getDataContext();
+  if (!ctx) return { error: "Non authentifié" };
+  const { db, userId } = ctx;
 
-  // Générer le numéro de facture
-  const { count } = await supabase.from("factures").select("*", { count: "exact", head: true }).eq("user_id", user.id);
+  const { count } = await db.from("factures").select("*", { count: "exact", head: true }).eq("user_id", userId);
   const annee = new Date().getFullYear();
   const numero = `FAC-${annee}-${String((count ?? 0) + 1).padStart(4, "0")}`;
 
-  const { data: facture, error: factureError } = await supabase
+  const { data: facture, error: factureError } = await db
     .from("factures")
     .insert({
-      user_id: user.id,
+      user_id: userId,
       client_id: data.clientId,
       numero,
       statut: "brouillon",
@@ -42,7 +41,6 @@ export async function createFacture(data: {
 
   if (factureError) return { error: factureError.message };
 
-  // Insérer les lignes
   const lignes = data.lignes.map((l, i) => ({
     facture_id: facture.id,
     service_id: l.serviceId ?? null,
@@ -56,32 +54,30 @@ export async function createFacture(data: {
     ordre: i,
   }));
 
-  const { error: lignesError } = await supabase.from("lignes_facture").insert(lignes);
+  const { error: lignesError } = await db.from("lignes_facture").insert(lignes);
   if (lignesError) return { error: lignesError.message };
 
-  // Mettre à jour total_depense, nb_factures et derniere_visite
-  const { data: clientRow } = await supabase.from("clients").select("total_depense, nb_factures").eq("id", data.clientId).single();
+  const { data: clientRow } = await db.from("clients").select("total_depense, nb_factures").eq("id", data.clientId).eq("user_id", userId).single();
   if (clientRow) {
-    await supabase.from("clients").update({
+    await db.from("clients").update({
       total_depense: clientRow.total_depense + data.totalTTC,
       nb_factures: clientRow.nb_factures + 1,
       derniere_visite: data.dateEmission,
-    }).eq("id", data.clientId);
+    }).eq("id", data.clientId).eq("user_id", userId);
   }
 
-  // Décrémenter le stock + enregistrer mouvements de sortie
   const serviceIds = data.lignes.map(l => l.serviceId).filter(Boolean) as string[];
   if (serviceIds.length > 0) {
-    const { data: svcs } = await supabase.from("services").select("id, type, stock_id, nom").in("id", serviceIds);
-    const articleSvcs = (svcs ?? []).filter(s => s.type === "article" && s.stock_id);
-    for (const svc of articleSvcs) {
+    const { data: svcs } = await db.from("services").select("id, type, stock_id, nom").eq("user_id", userId).in("id", serviceIds);
+    const articleSvcs = (svcs ?? []).filter((s: { type: string; stock_id: string | null }) => s.type === "article" && s.stock_id);
+    for (const svc of articleSvcs as { id: string; nom: string; stock_id: string }[]) {
       const ligne = data.lignes.find(l => l.serviceId === svc.id);
-      if (!ligne || !svc.stock_id) continue;
-      const { data: stockItem } = await supabase.from("stock").select("quantite").eq("id", svc.stock_id).single();
+      if (!ligne) continue;
+      const { data: stockItem } = await db.from("stock").select("quantite").eq("id", svc.stock_id).single();
       if (stockItem) {
-        await supabase.from("stock").update({ quantite: Math.max(0, stockItem.quantite - ligne.quantite) }).eq("id", svc.stock_id);
-        await supabase.from("mouvements_stock").insert({
-          user_id: user.id,
+        await db.from("stock").update({ quantite: Math.max(0, stockItem.quantite - ligne.quantite) }).eq("id", svc.stock_id);
+        await db.from("mouvements_stock").insert({
+          user_id: userId,
           stock_id: svc.stock_id,
           article_nom: svc.nom,
           type: "sortie",
@@ -99,14 +95,17 @@ export async function createFacture(data: {
 }
 
 export async function updateStatutFacture(id: string, statut: StatutFacture, modePaiement?: string) {
-  const supabase = createClient();
+  const ctx = await getDataContext();
+  if (!ctx) return { error: "Non authentifié" };
+  const { db, userId } = ctx;
+
   const update: Record<string, unknown> = { statut };
   if (statut === "payee") {
     update.date_paiement = new Date().toISOString().split("T")[0];
     if (modePaiement) update.mode_paiement = modePaiement;
   }
 
-  const { error } = await supabase.from("factures").update(update).eq("id", id);
+  const { error } = await db.from("factures").update(update).eq("id", id).eq("user_id", userId);
   if (error) return { error: error.message };
   revalidatePath("/factures");
   revalidatePath(`/factures/${id}`);
@@ -114,8 +113,11 @@ export async function updateStatutFacture(id: string, statut: StatutFacture, mod
 }
 
 export async function deleteFacture(id: string) {
-  const supabase = createClient();
-  const { error } = await supabase.from("factures").delete().eq("id", id);
+  const ctx = await getDataContext();
+  if (!ctx) return { error: "Non authentifié" };
+  const { db, userId } = ctx;
+
+  const { error } = await db.from("factures").delete().eq("id", id).eq("user_id", userId);
   if (error) return { error: error.message };
   revalidatePath("/factures");
   redirect("/factures");

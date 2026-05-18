@@ -1,35 +1,44 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { getDataContext } from "@/lib/auth/context";
 
 export async function getAgents() {
-  const supabase = createClient();
-  const { data } = await supabase.from("agents").select("*").eq("actif", true).order("nom");
+  const ctx = await getDataContext();
+  if (!ctx) return [];
+  const { db, userId } = ctx;
+  const { data } = await db.from("agents").select("*").eq("user_id", userId).eq("actif", true).order("nom");
   return data ?? [];
 }
 
 export async function createAgent(nom: string) {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: "Non authentifié" };
-  const { error } = await supabase.from("agents").insert({ user_id: user.id, nom });
+  const ctx = await getDataContext();
+  if (!ctx) return { error: "Non authentifié" };
+  const { db, userId } = ctx;
+
+  const { error } = await db.from("agents").insert({ user_id: userId, nom });
   if (error) return { error: error.message };
   revalidatePath("/agents");
   return { success: true };
 }
 
 export async function updateAgent(id: string, nom: string) {
-  const supabase = createClient();
-  const { error } = await supabase.from("agents").update({ nom }).eq("id", id);
+  const ctx = await getDataContext();
+  if (!ctx) return { error: "Non authentifié" };
+  const { db, userId } = ctx;
+
+  const { error } = await db.from("agents").update({ nom }).eq("id", id).eq("user_id", userId);
   if (error) return { error: error.message };
   revalidatePath("/agents");
   return { success: true };
 }
 
 export async function deleteAgent(id: string) {
-  const supabase = createClient();
-  const { error } = await supabase.from("agents").update({ actif: false }).eq("id", id);
+  const ctx = await getDataContext();
+  if (!ctx) return { error: "Non authentifié" };
+  const { db, userId } = ctx;
+
+  const { error } = await db.from("agents").update({ actif: false }).eq("id", id).eq("user_id", userId);
   if (error) return { error: error.message };
   revalidatePath("/agents");
   return { success: true };

@@ -1,15 +1,12 @@
-import { createClient } from "@/lib/supabase/server";
+import { getDataContext } from "@/lib/auth/context";
 import { ClientsClient } from "@/components/clients/ClientsClient";
+import { redirect } from "next/navigation";
 
 export default async function ClientsPage() {
-  const supabase = createClient();
-  const { data: clients } = await supabase
-    .from("clients")
-    .select("*")
-    .order("nom");
-  const { count: nbFactures } = await supabase
-    .from("factures")
-    .select("client_id", { count: "exact", head: true });
+  const ctx = await getDataContext();
+  if (!ctx) redirect("/landing");
+  const { db, userId } = ctx;
 
+  const { data: clients } = await db.from("clients").select("*").eq("user_id", userId).order("nom");
   return <ClientsClient initialClients={clients ?? []} />;
 }

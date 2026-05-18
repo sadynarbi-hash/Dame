@@ -5,29 +5,23 @@ import { RevenueChart } from "@/components/dashboard/RevenueChart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatutFactureBadge } from "@/components/shared/StatutBadge";
-import { createClient } from "@/lib/supabase/server";
+import { getDataContext } from "@/lib/auth/context";
 import { getStatsDashboard } from "@/lib/db/dashboard";
 import { formatFCFA, formatDate } from "@/lib/utils/formatters";
+import { redirect } from "next/navigation";
 
 export default async function DashboardPage() {
-  const supabase = createClient();
-  const [
-    stats,
-    { data: dernieresFactures },
-    { data: stockAlertes },
-  ] = await Promise.all([
-    getStatsDashboard(),
-    supabase.from("factures")
-      .select("*, client:clients(prenom, nom)")
-      .order("created_at", { ascending: false })
-      .limit(5),
-    supabase.from("stock")
-      .select("nom, quantite, unite, seuil_alerte")
-      .lte("quantite", supabase.from("stock").select("seuil_alerte")),
+  const ctx = await getDataContext();
+  if (!ctx) redirect("/landing");
+  const { db, userId } = ctx;
+
+  const [stats, { data: dernieresFactures }, { data: stockAlertes }] = await Promise.all([
+    getStatsDashboard(ctx),
+    db.from("factures").select("*, client:clients(prenom, nom)").eq("user_id", userId).order("created_at", { ascending: false }).limit(5),
+    db.from("stock").select("nom, quantite, unite, seuil_alerte").eq("user_id", userId),
   ]);
 
-  // Workaround: filtre les alertes côté app
-  const alertesStock = stockAlertes?.filter((a) => a.quantite <= a.seuil_alerte) ?? [];
+  const alertesStock = (stockAlertes ?? []).filter((a: { quantite: number; seuil_alerte: number }) => a.quantite <= a.seuil_alerte);
 
   return (
     <div className="space-y-6">
@@ -38,7 +32,6 @@ export default async function DashboardPage() {
         </Button>
       </div>
 
-      {/* CA principal */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard title="CA Global" value={formatFCFA(stats.caGlobal)} subtitle={`${stats.totalFactures} factures émises`} icon={TrendingUp} color="purple" />
         <StatCard title="CA Encaissé" value={formatFCFA(stats.caEncaisse)} subtitle="Factures payées" icon={DollarSign} color="green" trend={{ value: "encaissé", positive: true }} />
@@ -61,12 +54,15 @@ export default async function DashboardPage() {
             <Button variant="ghost" size="sm" asChild><Link href="/factures">Voir tout</Link></Button>
           </CardHeader>
           <CardContent className="space-y-3">
-            {(dernieresFactures ?? []).map((facture) => (
+            {(dernieresFactures ?? []).map((facture: {
+              id: string; numero: string; total_ttc: number; statut: import("@/types").StatutFacture;
+              client: { prenom: string; nom: string } | null;
+            }) => (
               <Link key={facture.id} href={`/factures/${facture.id}`}>
                 <div className="flex items-center justify-between rounded-lg p-2 hover:bg-muted transition-colors cursor-pointer">
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">
-                      {facture.client ? `${(facture.client as { prenom: string; nom: string }).prenom} ${(facture.client as { prenom: string; nom: string }).nom}` : "—"}
+                      {facture.client ? `${facture.client.prenom} ${facture.client.nom}` : "—"}
                     </p>
                     <p className="text-xs text-muted-foreground">{facture.numero}</p>
                   </div>
@@ -82,7 +78,6 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* CA par service */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <CardTitle className="text-base flex items-center gap-2"><Trophy className="h-4 w-4 text-yellow-500" />CA par service</CardTitle>
@@ -119,7 +114,6 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Meilleurs clients */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <CardTitle className="text-base flex items-center gap-2"><Star className="h-4 w-4 text-yellow-500" />Meilleurs clients</CardTitle>
@@ -156,7 +150,7 @@ export default async function DashboardPage() {
               {alertesStock.length} article(s) à réapprovisionner
             </div>
             <div className="flex flex-wrap gap-2">
-              {alertesStock.map((a, i) => (
+              {alertesStock.map((a: { nom: string; quantite: number; unite: string }, i: number) => (
                 <span key={i} className="rounded-full bg-orange-100 px-3 py-1 text-xs font-medium text-orange-800">
                   {a.nom} — {a.quantite} {a.unite}
                 </span>

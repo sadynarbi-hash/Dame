@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { getDataContext } from "@/lib/auth/context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatFCFA, formatDate } from "@/lib/utils/formatters";
 import { ArrowDownCircle, ArrowUpCircle, TrendingUp } from "lucide-react";
@@ -6,28 +6,32 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { MouvementsFilter } from "@/components/stock/MouvementsFilter";
 import { Suspense } from "react";
+import { redirect } from "next/navigation";
 
 export default async function MouvementsStockPage({ searchParams }: { searchParams: { from?: string; to?: string } }) {
-  const supabase = createClient();
+  const ctx = await getDataContext();
+  if (!ctx) redirect("/landing");
+  const { db, userId } = ctx;
+
   const from = searchParams.from ?? "";
   const to = searchParams.to ?? "";
 
-  let query = supabase.from("mouvements_stock").select("*, facture:factures(numero)").order("date", { ascending: false });
+  let query = db.from("mouvements_stock").select("*, facture:factures(numero)").eq("user_id", userId).order("date", { ascending: false });
   if (from) query = query.gte("date", from);
   if (to) query = query.lte("date", to);
 
   const [{ data: mouvements }, { data: stockItems }] = await Promise.all([
     query,
-    supabase.from("stock").select("id, prix_achat"),
+    db.from("stock").select("id, prix_achat").eq("user_id", userId),
   ]);
 
   const mvts = mouvements ?? [];
-  const prixAchatMap = new Map((stockItems ?? []).map(s => [s.id, s.prix_achat]));
+  const prixAchatMap = new Map((stockItems ?? []).map((s: { id: string; prix_achat: number }) => [s.id, s.prix_achat]));
 
-  const totalEntrees = mvts.filter(m => m.type === "entree").reduce((s, m) => s + m.quantite * m.prix_unitaire, 0);
-  const sorties = mvts.filter(m => m.type === "sortie");
-  const totalCA = sorties.reduce((s, m) => s + m.quantite * m.prix_unitaire, 0);
-  const totalCoutSorties = sorties.reduce((s, m) => {
+  const totalEntrees = mvts.filter((m: { type: string }) => m.type === "entree").reduce((s: number, m: { quantite: number; prix_unitaire: number }) => s + m.quantite * m.prix_unitaire, 0);
+  const sorties = mvts.filter((m: { type: string }) => m.type === "sortie");
+  const totalCA = sorties.reduce((s: number, m: { quantite: number; prix_unitaire: number }) => s + m.quantite * m.prix_unitaire, 0);
+  const totalCoutSorties = sorties.reduce((s: number, m: { quantite: number; stock_id: string | null }) => {
     const pa = m.stock_id ? (prixAchatMap.get(m.stock_id) ?? 0) : 0;
     return s + m.quantite * pa;
   }, 0);
@@ -44,7 +48,6 @@ export default async function MouvementsStockPage({ searchParams }: { searchPara
         <MouvementsFilter from={from} to={to} />
       </Suspense>
 
-      {/* Stats résumé */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Card className="border-green-200 bg-green-50">
           <CardContent className="p-4 flex items-center gap-3">
@@ -75,9 +78,16 @@ export default async function MouvementsStockPage({ searchParams }: { searchPara
         </Card>
       </div>
 
-      {/* Table mouvements */}
       <Card>
-        <CardHeader><CardTitle className="text-base">Détail des mouvements {(from || to) && <span className="text-sm font-normal text-muted-foreground ml-2">{from && `du ${formatDate(from)}`}{from && to && " "}{to && `au ${formatDate(to)}`}</span>}</CardTitle></CardHeader>
+        <CardHeader>
+          <CardTitle className="text-base">
+            Détail des mouvements{(from || to) && (
+              <span className="text-sm font-normal text-muted-foreground ml-2">
+                {from && `du ${formatDate(from)}`}{from && to && " "}{to && `au ${formatDate(to)}`}
+              </span>
+            )}
+          </CardTitle>
+        </CardHeader>
         <CardContent className="p-0">
           {mvts.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-10">Aucun mouvement enregistré</p>
@@ -97,12 +107,15 @@ export default async function MouvementsStockPage({ searchParams }: { searchPara
                   </tr>
                 </thead>
                 <tbody className="divide-y">
-                  {mvts.map((m) => {
+                  {mvts.map((m: {
+                    id: string; date: string; article_nom: string; type: string;
+                    quantite: number; prix_unitaire: number; stock_id: string | null;
+                    facture: { numero: string } | null;
+                  }) => {
                     const isEntree = m.type === "entree";
                     const montant = m.quantite * m.prix_unitaire;
                     const prixAchat = m.stock_id ? (prixAchatMap.get(m.stock_id) ?? 0) : 0;
                     const benefice = isEntree ? null : (m.prix_unitaire - prixAchat) * m.quantite;
-                    const facture = m.facture as { numero: string } | null;
                     return (
                       <tr key={m.id} className="hover:bg-muted/30">
                         <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{formatDate(m.date)}</td>
@@ -124,7 +137,7 @@ export default async function MouvementsStockPage({ searchParams }: { searchPara
                           ) : <span className="text-muted-foreground">—</span>}
                         </td>
                         <td className="px-4 py-3 text-xs text-muted-foreground">
-                          {facture ? facture.numero : "—"}
+                          {m.facture ? m.facture.numero : "—"}
                         </td>
                       </tr>
                     );

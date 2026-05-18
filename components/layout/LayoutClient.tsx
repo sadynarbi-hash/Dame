@@ -3,15 +3,17 @@
 import { useState } from "react";
 import { Sidebar } from "./Sidebar";
 import { Header } from "./Header";
+import type { Permissions } from "@/lib/auth/context";
 
 interface LayoutClientProps {
   children: React.ReactNode;
   nomSalon: string;
   alertesStock: number;
   logo: string | null;
+  permissions?: Permissions | null;
 }
 
-export function LayoutClient({ children, nomSalon, alertesStock, logo }: LayoutClientProps) {
+export function LayoutClient({ children, nomSalon, alertesStock, logo, permissions }: LayoutClientProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
@@ -34,6 +36,7 @@ export function LayoutClient({ children, nomSalon, alertesStock, logo }: LayoutC
           nomSalon={nomSalon}
           alertesStock={alertesStock}
           logo={logo}
+          permissions={permissions}
           onClose={() => setSidebarOpen(false)}
         />
       </div>

@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { getDataContext } from "@/lib/auth/context";
 import type { StatutRendezVous } from "@/types";
 
 export async function createRendezVous(data: {
@@ -9,12 +9,12 @@ export async function createRendezVous(data: {
   heureDebut: string; heureFin: string; statut: StatutRendezVous;
   montantEstime: number; notes?: string;
 }) {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: "Non authentifié" };
+  const ctx = await getDataContext();
+  if (!ctx) return { error: "Non authentifié" };
+  const { db, userId } = ctx;
 
-  const { data: rdv, error } = await supabase.from("rendez_vous").insert({
-    user_id: user.id, client_id: data.clientId,
+  const { data: rdv, error } = await db.from("rendez_vous").insert({
+    user_id: userId, client_id: data.clientId,
     date: data.date, heure_debut: data.heureDebut, heure_fin: data.heureFin,
     statut: data.statut, montant_estime: data.montantEstime, notes: data.notes,
   }).select().single();
@@ -22,7 +22,7 @@ export async function createRendezVous(data: {
   if (error) return { error: error.message };
 
   if (data.serviceIds.length > 0) {
-    await supabase.from("rendez_vous_services").insert(
+    await db.from("rendez_vous_services").insert(
       data.serviceIds.map((sid) => ({ rendez_vous_id: rdv.id, service_id: sid }))
     );
   }
@@ -35,7 +35,10 @@ export async function updateRendezVous(id: string, data: Partial<{
   clientId: string; serviceIds: string[]; date: string; heureDebut: string;
   heureFin: string; statut: StatutRendezVous; montantEstime: number; notes: string;
 }>) {
-  const supabase = createClient();
+  const ctx = await getDataContext();
+  if (!ctx) return { error: "Non authentifié" };
+  const { db, userId } = ctx;
+
   const update: Record<string, unknown> = {};
   if (data.clientId !== undefined) update.client_id = data.clientId;
   if (data.date !== undefined) update.date = data.date;
@@ -45,13 +48,13 @@ export async function updateRendezVous(id: string, data: Partial<{
   if (data.montantEstime !== undefined) update.montant_estime = data.montantEstime;
   if (data.notes !== undefined) update.notes = data.notes;
 
-  const { error } = await supabase.from("rendez_vous").update(update).eq("id", id);
+  const { error } = await db.from("rendez_vous").update(update).eq("id", id).eq("user_id", userId);
   if (error) return { error: error.message };
 
   if (data.serviceIds !== undefined) {
-    await supabase.from("rendez_vous_services").delete().eq("rendez_vous_id", id);
+    await db.from("rendez_vous_services").delete().eq("rendez_vous_id", id);
     if (data.serviceIds.length > 0) {
-      await supabase.from("rendez_vous_services").insert(
+      await db.from("rendez_vous_services").insert(
         data.serviceIds.map((sid) => ({ rendez_vous_id: id, service_id: sid }))
       );
     }
@@ -62,8 +65,11 @@ export async function updateRendezVous(id: string, data: Partial<{
 }
 
 export async function deleteRendezVous(id: string) {
-  const supabase = createClient();
-  const { error } = await supabase.from("rendez_vous").delete().eq("id", id);
+  const ctx = await getDataContext();
+  if (!ctx) return { error: "Non authentifié" };
+  const { db, userId } = ctx;
+
+  const { error } = await db.from("rendez_vous").delete().eq("id", id).eq("user_id", userId);
   if (error) return { error: error.message };
   revalidatePath("/rendez-vous");
   return { success: true };
