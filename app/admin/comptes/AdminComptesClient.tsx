@@ -4,7 +4,7 @@ import { useTransition } from "react";
 import { setStatutCompte, setPlanCompte } from "@/lib/actions/admin";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Ban, Clock, Star } from "lucide-react";
+import { CheckCircle, Ban, Clock } from "lucide-react";
 
 type Compte = {
   id: string; user_id: string; nom: string; email: string;
@@ -15,7 +15,6 @@ type Compte = {
 function StatutBadge({ statut, trialEndsAt }: { statut: string | null; trialEndsAt: string | null }) {
   const expireDate = trialEndsAt ? new Date(trialEndsAt) : null;
   const estExpire = expireDate && expireDate < new Date();
-
   if (statut === "actif") return <Badge className="bg-green-100 text-green-700">Actif</Badge>;
   if (statut === "suspendu") return <Badge variant="destructive">Suspendu</Badge>;
   if (statut === "trial") {
@@ -31,6 +30,34 @@ function PlanBadge({ plan }: { plan: string | null }) {
   return <Badge className="bg-slate-100 text-slate-500">Gratuit</Badge>;
 }
 
+type Plan = "gratuit" | "starter" | "business";
+
+function PlanSelect({ userId, current, isPending, onChange }: {
+  userId: string; current: string | null; isPending: boolean;
+  onChange: (userId: string, plan: Plan) => void;
+}) {
+  const val = (current === "starter" || current === "business") ? current : "gratuit";
+  return (
+    <select
+      value={val}
+      disabled={isPending}
+      className="text-xs rounded-lg border border-stone-200 px-2 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-purple-300 cursor-pointer disabled:opacity-50"
+      onChange={(e) => {
+        const next = e.target.value as Plan;
+        if (!confirm(`Passer ce compte au plan "${next}" ?`)) {
+          e.target.value = val;
+          return;
+        }
+        onChange(userId, next);
+      }}
+    >
+      <option value="gratuit">Gratuit — 0 FCFA</option>
+      <option value="starter">Starter — 25 000 FCFA</option>
+      <option value="business">Business — 35 000 FCFA</option>
+    </select>
+  );
+}
+
 export function AdminComptesClient({ comptes }: { comptes: Compte[] }) {
   const [isPending, startTransition] = useTransition();
 
@@ -39,8 +66,7 @@ export function AdminComptesClient({ comptes }: { comptes: Compte[] }) {
     startTransition(async () => { await setStatutCompte(userId, statut); });
   };
 
-  const changePlan = (userId: string, plan: "gratuit" | "starter" | "business") => {
-    if (!confirm(`Confirmer : passer ce compte au plan "${plan}" ?`)) return;
+  const changePlan = (userId: string, plan: Plan) => {
     startTransition(async () => { await setPlanCompte(userId, plan); });
   };
 
@@ -98,27 +124,13 @@ export function AdminComptesClient({ comptes }: { comptes: Compte[] }) {
                     </Button>
                   </div>
                 </td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center justify-center gap-1 flex-wrap">
-                    {c.abonnement_plan !== "gratuit" && (
-                      <Button size="sm" variant="outline" className="text-slate-500 border-slate-200 h-7 text-xs" disabled={isPending}
-                        onClick={() => changePlan(c.user_id, "gratuit")}>
-                        → Gratuit
-                      </Button>
-                    )}
-                    {c.abonnement_plan !== "starter" && (
-                      <Button size="sm" variant="outline" className="text-blue-600 border-blue-200 hover:bg-blue-50 h-7 text-xs" disabled={isPending}
-                        onClick={() => changePlan(c.user_id, "starter")}>
-                        → Starter
-                      </Button>
-                    )}
-                    {c.abonnement_plan !== "business" && (
-                      <Button size="sm" variant="outline" className="text-purple-600 border-purple-200 hover:bg-purple-50 h-7 text-xs" disabled={isPending}
-                        onClick={() => changePlan(c.user_id, "business")}>
-                        <Star className="h-3 w-3 mr-1" />→ Business
-                      </Button>
-                    )}
-                  </div>
+                <td className="px-4 py-3 text-center">
+                  <PlanSelect
+                    userId={c.user_id}
+                    current={c.abonnement_plan}
+                    isPending={isPending}
+                    onChange={changePlan}
+                  />
                 </td>
               </tr>
             ))}
@@ -128,9 +140,9 @@ export function AdminComptesClient({ comptes }: { comptes: Compte[] }) {
 
       <div className="rounded-xl border bg-muted/30 p-4 text-sm text-muted-foreground space-y-1">
         <p className="font-medium text-foreground mb-2">Plans tarifaires</p>
-        <p><span className="font-medium text-foreground">Starter — 25 000 FCFA/mois</span> : 100 factures/mois · 1 utilisateur · stock basique</p>
-        <p><span className="font-medium text-foreground">Business — 35 000 FCFA/mois</span> : Factures illimitées · 5 utilisateurs · stock avancé + rapports bénéfices</p>
         <p><span className="font-medium text-foreground">Gratuit — 0 FCFA</span> : 5 factures/mois · 1 utilisateur</p>
+        <p><span className="font-medium text-foreground">Starter — 25 000 FCFA/mois</span> : 100 factures/mois · 1 utilisateur · stock basique</p>
+        <p><span className="font-medium text-foreground">Business — 35 000 FCFA/mois</span> : Factures illimitées · 5 utilisateurs · stock avancé + rapports</p>
         <p className="text-xs mt-2">Pendant l&apos;essai actif, les utilisateurs ont accès au plan Business.</p>
       </div>
     </div>
