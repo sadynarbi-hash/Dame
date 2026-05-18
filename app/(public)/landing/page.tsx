@@ -96,40 +96,151 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero */}
-      <section className="pt-32 pb-20 px-4 bg-gradient-to-br from-purple-950 via-purple-900 to-purple-700 text-white relative overflow-hidden">
+      <section className="pt-28 pb-16 px-4 bg-gradient-to-br from-purple-950 via-purple-900 to-purple-700 text-white relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
-        <div className="mx-auto max-w-4xl text-center relative">
-          <Badge className="mb-6 bg-white/10 text-white border-white/20 hover:bg-white/20">
-            <Zap className="h-3 w-3 mr-1" />
-            Spécialement conçu pour les salons africains
-          </Badge>
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6">
-            La gestion de votre salon,{" "}
-            <span className="text-purple-300">enfin simple</span>
-          </h1>
-          <p className="text-lg sm:text-xl text-purple-100 mb-10 max-w-2xl mx-auto leading-relaxed">
-            Factures professionnelles, gestion des clients, rendez-vous, stock et charges — tout en un.
-            En FCFA, en français, pensé pour vous.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/connexion">
-              <Button size="lg" className="w-full sm:w-auto bg-white text-purple-900 hover:bg-purple-50 font-semibold text-base px-8">
-                Démarrer gratuitement
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
-            <Button size="lg" variant="outline" className="w-full sm:w-auto border-white/30 text-white hover:bg-white/10 text-base px-8">
-              Voir la démo
-            </Button>
-          </div>
-          <p className="mt-4 text-sm text-purple-300">
-            Gratuit pour commencer · Aucune carte bancaire requise
-          </p>
-        </div>
+        <div className="mx-auto max-w-6xl relative">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            {/* Left: text */}
+            <div className="text-center lg:text-left">
+              <Badge className="mb-6 bg-white/10 text-white border-white/20 hover:bg-white/20">
+                <Zap className="h-3 w-3 mr-1" />
+                Spécialement conçu pour les salons africains
+              </Badge>
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6">
+                La gestion de votre salon,{" "}
+                <span className="text-purple-300">enfin simple</span>
+              </h1>
+              <p className="text-lg sm:text-xl text-purple-100 mb-10 max-w-xl leading-relaxed">
+                Factures professionnelles, gestion des clients, rendez-vous, stock et charges — tout en un.
+                En FCFA, en français, pensé pour vous.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                <Link href="/connexion">
+                  <Button size="lg" className="w-full sm:w-auto bg-white text-purple-900 hover:bg-purple-50 font-semibold text-base px-8">
+                    Démarrer gratuitement
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+                <Link href="/connexion">
+                  <Button size="lg" variant="outline" className="w-full sm:w-auto border-white/30 text-white hover:bg-white/10 text-base px-8">
+                    Voir la démo
+                  </Button>
+                </Link>
+              </div>
+              <p className="mt-4 text-sm text-purple-300">
+                Gratuit pour commencer · Aucune carte bancaire requise
+              </p>
+            </div>
 
-        {/* Floating preview card */}
-        <div className="mx-auto max-w-4xl mt-16 px-4">
-          <div className="rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-4 sm:p-6">
+            {/* Right: phone mockup */}
+            <div className="flex justify-center lg:justify-end">
+              <div className="relative">
+                {/* Glow */}
+                <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-56 h-10 bg-purple-400/40 blur-2xl rounded-full" />
+
+                {/* Phone frame */}
+                <div className="relative w-[270px] h-[550px] bg-[#111] rounded-[44px] border-[10px] border-[#222] shadow-[0_40px_80px_rgba(0,0,0,0.6)] overflow-hidden">
+                  {/* Notch */}
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-5 bg-[#111] rounded-b-2xl z-10" />
+                  {/* Status bar */}
+                  <div className="h-6 bg-[#1c1917] flex items-center justify-between px-5 pt-1">
+                    <span className="text-white text-[9px] font-medium">9:41</span>
+                    <span className="text-white/60 text-[8px]">▌▌▌ WiFi 🔋</span>
+                  </div>
+
+                  {/* App UI */}
+                  <div className="flex h-full bg-[#f9f7f5]">
+                    {/* Sidebar */}
+                    <div className="w-[72px] bg-[#292524] flex flex-col py-2 shrink-0">
+                      {/* Logo */}
+                      <div className="flex justify-center mb-3">
+                        <div className="w-8 h-8 bg-purple-700 rounded-lg flex items-center justify-center">
+                          <Scissors className="h-3.5 w-3.5 text-white" />
+                        </div>
+                      </div>
+
+                      {[
+                        { icon: BarChart3, label: "Dashboard", active: true },
+                        { icon: FileText, label: "Factures", active: false },
+                        { icon: Users, label: "Clients", active: false },
+                        { icon: Scissors, label: "Services", active: false },
+                        { icon: Package, label: "Stock", active: false },
+                        { icon: Calendar, label: "RDV", active: false },
+                        { icon: TrendingDown, label: "Charges", active: false },
+                      ].map(({ icon: Icon, label, active }) => (
+                        <div
+                          key={label}
+                          className={`mx-1.5 mb-0.5 px-1 py-1.5 rounded-lg flex flex-col items-center gap-0.5 ${active ? "bg-purple-700" : ""}`}
+                        >
+                          <Icon className={`h-3.5 w-3.5 ${active ? "text-white" : "text-white/50"}`} />
+                          <span className={`text-[7px] leading-tight text-center ${active ? "text-white" : "text-white/40"}`}>{label}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Main content */}
+                    <div className="flex-1 p-2.5 overflow-hidden">
+                      <p className="text-[9px] font-bold text-gray-800 mb-2">Tableau de bord</p>
+
+                      {/* Stats grid */}
+                      <div className="grid grid-cols-2 gap-1 mb-2.5">
+                        {[
+                          { label: "Revenus", value: "1,2M FCFA", bg: "bg-green-50", text: "text-green-700" },
+                          { label: "Clients", value: "147", bg: "bg-blue-50", text: "text-blue-700" },
+                          { label: "Factures att.", value: "8", bg: "bg-yellow-50", text: "text-yellow-700" },
+                          { label: "RDV auj.", value: "5", bg: "bg-purple-50", text: "text-purple-700" },
+                        ].map((s) => (
+                          <div key={s.label} className={`${s.bg} rounded-lg p-1.5`}>
+                            <p className="text-[6px] text-gray-500">{s.label}</p>
+                            <p className={`text-[9px] font-bold ${s.text}`}>{s.value}</p>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Recent invoices */}
+                      <p className="text-[7px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Factures récentes</p>
+                      {[
+                        { client: "Aminata D.", montant: "45 000", paid: true },
+                        { client: "Fatou K.", montant: "28 500", paid: false },
+                        { client: "Marième S.", montant: "62 000", paid: true },
+                      ].map((f) => (
+                        <div key={f.client} className="flex items-center justify-between bg-white rounded-lg px-1.5 py-1 mb-0.5 shadow-sm">
+                          <span className="text-[7px] text-gray-700 font-medium">{f.client}</span>
+                          <span className="text-[7px] font-bold text-gray-800">{f.montant}</span>
+                          <span className={`text-[6px] px-1 py-0.5 rounded-full font-medium ${f.paid ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"}`}>
+                            {f.paid ? "Payée" : "En att."}
+                          </span>
+                        </div>
+                      ))}
+
+                      {/* Alert */}
+                      <div className="mt-1.5 bg-orange-50 border border-orange-200 rounded-lg px-1.5 py-1 flex items-center gap-1">
+                        <span className="text-[7px]">⚠️</span>
+                        <span className="text-[6px] text-orange-700">2 produits en stock faible</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Floating badge */}
+                <div className="absolute -right-4 top-16 bg-white rounded-2xl shadow-xl px-3 py-2 flex items-center gap-2 border border-gray-100">
+                  <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center text-xs">✓</div>
+                  <div>
+                    <p className="text-[9px] font-bold text-gray-800">Facture envoyée</p>
+                    <p className="text-[8px] text-gray-500">45 000 FCFA</p>
+                  </div>
+                </div>
+
+                <div className="absolute -left-6 bottom-24 bg-white rounded-2xl shadow-xl px-3 py-2 border border-gray-100">
+                  <p className="text-[9px] font-bold text-gray-800">📅 Rappel RDV</p>
+                  <p className="text-[8px] text-gray-500">Aminata — 14h00</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Stats bar */}
+          <div className="mt-16 rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-4 sm:p-6">
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               {[
                 { label: "Chiffre du mois", value: "1 250 000 FCFA", color: "text-green-400" },
