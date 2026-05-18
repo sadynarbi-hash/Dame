@@ -18,7 +18,8 @@ export type DataContext = {
   userId: string;
   isMembre: boolean;
   permissions: Permissions | null;
-  db: SupabaseClient;
+  // db is either the regular SSR client (owner, no service key) or service role client (member support)
+  db: SupabaseClient | ReturnType<typeof createClient>;
 };
 
 export const DEFAULT_PERMISSIONS: Permissions = {
@@ -33,10 +34,25 @@ export const DEFAULT_PERMISSIONS: Permissions = {
   parametres: false,
 };
 
+function serviceKeyConfigured(): boolean {
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
+  return key.length > 30 && !key.startsWith("REMPLACER");
+}
+
 export async function getDataContext(): Promise<DataContext | null> {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
+
+  // Without a real service role key, run in owner-only mode (RLS handles filtering)
+  if (!serviceKeyConfigured()) {
+    return {
+      userId: user.id,
+      isMembre: false,
+      permissions: null,
+      db: supabase,
+    };
+  }
 
   const db = createServiceRoleClient();
 
@@ -77,7 +93,7 @@ export async function getDataContext(): Promise<DataContext | null> {
     };
   }
 
-  // 3. Regular salon owner
+  // 3. Regular salon owner (with service role db for explicit user_id filtering)
   return {
     userId: user.id,
     isMembre: false,
