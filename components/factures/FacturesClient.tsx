@@ -71,12 +71,15 @@ export function FacturesClient({ initialFactures }: { initialFactures: FactureRo
   // ── Stats recouvrement ──
   const today = todayStr();
   const moisDebut = monthStart();
+  // Pour les factures payées sans montant_paye (données avant migration), on utilise total_ttc
+  const amountRecouvr = (f: FactureRow) =>
+    f.statut === "payee" ? (f.montant_paye || f.total_ttc) : (f.montant_paye ?? 0);
   const recouvrJour = factures
-    .filter(f => f.statut === "payee" && f.date_paiement === today)
-    .reduce((s, f) => s + (f.montant_paye ?? f.total_ttc), 0);
+    .filter(f => f.date_emission === today)
+    .reduce((s, f) => s + amountRecouvr(f), 0);
   const recouvrMois = factures
-    .filter(f => (f.statut === "payee" || f.statut === "partielle") && f.date_paiement && f.date_paiement >= moisDebut)
-    .reduce((s, f) => s + (f.montant_paye ?? 0), 0);
+    .filter(f => f.date_emission >= moisDebut)
+    .reduce((s, f) => s + amountRecouvr(f), 0);
 
   const totalFiltre = filtered.reduce((s, f) => s + f.total_ttc, 0);
   const recouvrFiltre = filtered.reduce((s, f) => s + (f.montant_paye ?? 0), 0);
