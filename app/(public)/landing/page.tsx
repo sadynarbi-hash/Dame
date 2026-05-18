@@ -96,161 +96,148 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero */}
-      <section className="pt-28 pb-16 px-4 bg-gradient-to-br from-purple-950 via-purple-900 to-purple-700 text-white relative overflow-hidden">
+      <section className="pt-24 pb-0 px-4 bg-gradient-to-br from-purple-950 via-purple-900 to-purple-700 text-white relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-10" />
+
         <div className="mx-auto max-w-6xl relative">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-            {/* Left: text */}
-            <div className="text-center lg:text-left">
-              <Badge className="mb-6 bg-white/10 text-white border-white/20 hover:bg-white/20">
+          {/* Top: badge + text + CTAs */}
+          <div className="flex flex-col lg:flex-row items-center gap-10 pb-12">
+
+            {/* Left text */}
+            <div className="flex-1 text-center lg:text-left">
+              <Badge className="mb-4 bg-white/10 text-white border-white/20">
                 <Zap className="h-3 w-3 mr-1" />
-                Spécialement conçu pour les salons africains
+                Conçu pour les salons africains
               </Badge>
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-6">
-                La gestion de votre salon,{" "}
-                <span className="text-purple-300">enfin simple</span>
+              <h1 className="text-3xl sm:text-4xl font-bold leading-snug mb-4">
+                Gérez votre salon<br />
+                <span className="text-purple-300">en quelques clics</span>
               </h1>
-              <p className="text-lg sm:text-xl text-purple-100 mb-10 max-w-xl leading-relaxed">
-                Factures professionnelles, gestion des clients, rendez-vous, stock et charges — tout en un.
-                En FCFA, en français, pensé pour vous.
+              <p className="text-purple-200 text-base leading-relaxed mb-8 max-w-md mx-auto lg:mx-0">
+                Factures, clients, rendez-vous, stock et charges — tout en un. En FCFA, en français.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+              <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start">
                 <Link href="/connexion">
-                  <Button size="lg" className="w-full sm:w-auto bg-white text-purple-900 hover:bg-purple-50 font-semibold text-base px-8">
+                  <Button size="lg" className="bg-white text-purple-900 hover:bg-purple-50 font-semibold px-7">
                     Démarrer gratuitement
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </Link>
                 <Link href="/connexion">
-                  <Button size="lg" variant="outline" className="w-full sm:w-auto border-white/30 text-white hover:bg-white/10 text-base px-8">
+                  <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10 px-7">
                     Voir la démo
                   </Button>
                 </Link>
               </div>
-              <p className="mt-4 text-sm text-purple-300">
-                Gratuit pour commencer · Aucune carte bancaire requise
-              </p>
+              <p className="mt-3 text-xs text-purple-400">Gratuit pour commencer · Aucune carte requise</p>
             </div>
 
-            {/* Right: phone mockup */}
-            <div className="flex justify-center lg:justify-end">
-              <div className="relative">
-                {/* Glow */}
-                <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-56 h-10 bg-purple-400/40 blur-2xl rounded-full" />
+            {/* Right: phone */}
+            <div className="shrink-0 flex justify-center lg:justify-end pb-0 lg:pb-0">
+              <div className="relative mt-4">
+                {/* Glow under phone */}
+                <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-48 h-8 bg-purple-400/30 blur-2xl rounded-full" />
 
                 {/* Phone frame */}
-                <div className="relative w-[270px] h-[550px] bg-[#111] rounded-[44px] border-[10px] border-[#222] shadow-[0_40px_80px_rgba(0,0,0,0.6)] overflow-hidden">
-                  {/* Notch */}
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-5 bg-[#111] rounded-b-2xl z-10" />
-                  {/* Status bar */}
-                  <div className="h-6 bg-[#1c1917] flex items-center justify-between px-5 pt-1">
-                    <span className="text-white text-[9px] font-medium">9:41</span>
-                    <span className="text-white/60 text-[8px]">▌▌▌ WiFi 🔋</span>
+                <div className="relative w-[248px] h-[504px] bg-[#111] rounded-[40px] border-[9px] border-[#1e1e1e] shadow-[0_32px_64px_rgba(0,0,0,0.55)] overflow-hidden">
+                  {/* Status bar + notch */}
+                  <div className="relative h-7 bg-[#1c1917] flex items-center justify-between px-4">
+                    <span className="text-white text-[9px] font-semibold">9:41</span>
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-20 h-4 bg-[#111] rounded-b-2xl" />
+                    <span className="text-white/50 text-[8px]">WiFi ●●●</span>
                   </div>
 
-                  {/* App UI */}
-                  <div className="flex h-full bg-[#f9f7f5]">
+                  {/* App layout */}
+                  <div className="flex" style={{ height: "calc(100% - 28px)" }}>
                     {/* Sidebar */}
-                    <div className="w-[72px] bg-[#292524] flex flex-col py-2 shrink-0">
-                      {/* Logo */}
-                      <div className="flex justify-center mb-3">
-                        <div className="w-8 h-8 bg-purple-700 rounded-lg flex items-center justify-center">
-                          <Scissors className="h-3.5 w-3.5 text-white" />
+                    <div className="w-[64px] bg-[#292524] flex flex-col pt-2 pb-4 shrink-0">
+                      <div className="flex justify-center mb-2.5">
+                        <div className="w-7 h-7 bg-purple-700 rounded-lg flex items-center justify-center">
+                          <Scissors className="h-3 w-3 text-white" />
                         </div>
                       </div>
-
                       {[
                         { icon: BarChart3, label: "Dashboard", active: true },
-                        { icon: FileText, label: "Factures", active: false },
-                        { icon: Users, label: "Clients", active: false },
-                        { icon: Scissors, label: "Services", active: false },
-                        { icon: Package, label: "Stock", active: false },
-                        { icon: Calendar, label: "RDV", active: false },
-                        { icon: TrendingDown, label: "Charges", active: false },
+                        { icon: FileText, label: "Factures" },
+                        { icon: Users, label: "Clients" },
+                        { icon: Scissors, label: "Services" },
+                        { icon: Package, label: "Stock" },
+                        { icon: Calendar, label: "RDV" },
+                        { icon: TrendingDown, label: "Charges" },
                       ].map(({ icon: Icon, label, active }) => (
-                        <div
-                          key={label}
-                          className={`mx-1.5 mb-0.5 px-1 py-1.5 rounded-lg flex flex-col items-center gap-0.5 ${active ? "bg-purple-700" : ""}`}
-                        >
-                          <Icon className={`h-3.5 w-3.5 ${active ? "text-white" : "text-white/50"}`} />
-                          <span className={`text-[7px] leading-tight text-center ${active ? "text-white" : "text-white/40"}`}>{label}</span>
+                        <div key={label} className={`mx-1 mb-px px-1 py-1.5 rounded-lg flex flex-col items-center gap-0.5 ${active ? "bg-purple-700" : ""}`}>
+                          <Icon className={`h-3 w-3 ${active ? "text-white" : "text-white/40"}`} />
+                          <span className={`text-[6.5px] text-center leading-tight ${active ? "text-white" : "text-white/35"}`}>{label}</span>
                         </div>
                       ))}
                     </div>
 
-                    {/* Main content */}
-                    <div className="flex-1 p-2.5 overflow-hidden">
-                      <p className="text-[9px] font-bold text-gray-800 mb-2">Tableau de bord</p>
-
-                      {/* Stats grid */}
-                      <div className="grid grid-cols-2 gap-1 mb-2.5">
+                    {/* Content */}
+                    <div className="flex-1 bg-gray-50 p-2 overflow-hidden">
+                      <p className="text-[8.5px] font-bold text-gray-800 mb-1.5">Tableau de bord</p>
+                      <div className="grid grid-cols-2 gap-1 mb-2">
                         {[
-                          { label: "Revenus", value: "1,2M FCFA", bg: "bg-green-50", text: "text-green-700" },
-                          { label: "Clients", value: "147", bg: "bg-blue-50", text: "text-blue-700" },
-                          { label: "Factures att.", value: "8", bg: "bg-yellow-50", text: "text-yellow-700" },
-                          { label: "RDV auj.", value: "5", bg: "bg-purple-50", text: "text-purple-700" },
+                          { label: "Revenus", value: "1,2M FCFA", bg: "bg-green-50", color: "text-green-700" },
+                          { label: "Clients", value: "147", bg: "bg-blue-50", color: "text-blue-700" },
+                          { label: "Factures", value: "8 att.", bg: "bg-amber-50", color: "text-amber-700" },
+                          { label: "RDV", value: "5 auj.", bg: "bg-purple-50", color: "text-purple-700" },
                         ].map((s) => (
                           <div key={s.label} className={`${s.bg} rounded-lg p-1.5`}>
-                            <p className="text-[6px] text-gray-500">{s.label}</p>
-                            <p className={`text-[9px] font-bold ${s.text}`}>{s.value}</p>
+                            <p className="text-[5.5px] text-gray-400 mb-0.5">{s.label}</p>
+                            <p className={`text-[8px] font-bold ${s.color}`}>{s.value}</p>
                           </div>
                         ))}
                       </div>
-
-                      {/* Recent invoices */}
-                      <p className="text-[7px] font-semibold text-gray-500 uppercase tracking-wide mb-1">Factures récentes</p>
+                      <p className="text-[6px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Factures récentes</p>
                       {[
                         { client: "Aminata D.", montant: "45 000", paid: true },
                         { client: "Fatou K.", montant: "28 500", paid: false },
                         { client: "Marième S.", montant: "62 000", paid: true },
                       ].map((f) => (
-                        <div key={f.client} className="flex items-center justify-between bg-white rounded-lg px-1.5 py-1 mb-0.5 shadow-sm">
-                          <span className="text-[7px] text-gray-700 font-medium">{f.client}</span>
-                          <span className="text-[7px] font-bold text-gray-800">{f.montant}</span>
-                          <span className={`text-[6px] px-1 py-0.5 rounded-full font-medium ${f.paid ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"}`}>
-                            {f.paid ? "Payée" : "En att."}
+                        <div key={f.client} className="flex items-center justify-between bg-white rounded-md px-1.5 py-1 mb-0.5 shadow-sm">
+                          <span className="text-[6.5px] text-gray-700">{f.client}</span>
+                          <span className="text-[6.5px] font-bold text-gray-800">{f.montant}</span>
+                          <span className={`text-[5.5px] px-1 py-px rounded-full ${f.paid ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"}`}>
+                            {f.paid ? "Payée" : "Att."}
                           </span>
                         </div>
                       ))}
-
-                      {/* Alert */}
-                      <div className="mt-1.5 bg-orange-50 border border-orange-200 rounded-lg px-1.5 py-1 flex items-center gap-1">
-                        <span className="text-[7px]">⚠️</span>
-                        <span className="text-[6px] text-orange-700">2 produits en stock faible</span>
+                      <div className="mt-1 bg-orange-50 border border-orange-100 rounded-md px-1.5 py-1 flex items-center gap-1">
+                        <span className="text-[7px]">⚠</span>
+                        <span className="text-[6px] text-orange-600">2 produits en stock faible</span>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Floating badge */}
-                <div className="absolute -right-4 top-16 bg-white rounded-2xl shadow-xl px-3 py-2 flex items-center gap-2 border border-gray-100">
-                  <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center text-xs">✓</div>
+                {/* Floating chips */}
+                <div className="absolute -right-6 top-14 bg-white rounded-xl shadow-lg px-2.5 py-1.5 flex items-center gap-1.5 border border-gray-100/80">
+                  <span className="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center text-[9px]">✓</span>
                   <div>
-                    <p className="text-[9px] font-bold text-gray-800">Facture envoyée</p>
-                    <p className="text-[8px] text-gray-500">45 000 FCFA</p>
+                    <p className="text-[8px] font-bold text-gray-800">Facture payée</p>
+                    <p className="text-[7px] text-gray-400">45 000 FCFA</p>
                   </div>
                 </div>
-
-                <div className="absolute -left-6 bottom-24 bg-white rounded-2xl shadow-xl px-3 py-2 border border-gray-100">
-                  <p className="text-[9px] font-bold text-gray-800">📅 Rappel RDV</p>
-                  <p className="text-[8px] text-gray-500">Aminata — 14h00</p>
+                <div className="absolute -left-8 bottom-20 bg-white rounded-xl shadow-lg px-2.5 py-1.5 border border-gray-100/80">
+                  <p className="text-[8px] font-bold text-gray-800">📅 RDV — 14h00</p>
+                  <p className="text-[7px] text-gray-400">Aminata Diallo</p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Stats bar */}
-          <div className="mt-16 rounded-2xl border border-white/10 bg-white/5 backdrop-blur p-4 sm:p-6">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {/* Stats bar — sits right at the bottom of the hero */}
+          <div className="rounded-t-2xl border-t border-x border-white/10 bg-white/5 backdrop-blur px-4 sm:px-8 py-5">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
               {[
-                { label: "Chiffre du mois", value: "1 250 000 FCFA", color: "text-green-400" },
-                { label: "Factures en attente", value: "8 factures", color: "text-yellow-400" },
-                { label: "Rendez-vous cette semaine", value: "24 RDV", color: "text-blue-400" },
-                { label: "Alertes stock", value: "2 produits", color: "text-orange-400" },
-              ].map((item) => (
-                <div key={item.label} className="rounded-xl bg-white/10 p-3 text-center">
-                  <p className={`text-lg font-bold ${item.color}`}>{item.value}</p>
-                  <p className="text-xs text-purple-200 mt-1">{item.label}</p>
+                { value: "500+", label: "Salons actifs" },
+                { value: "50 000+", label: "Factures créées" },
+                { value: "98%", label: "Clients satisfaits" },
+                { value: "3 pays", label: "Sénégal · Côte d'Ivoire · Mali" },
+              ].map((s) => (
+                <div key={s.label}>
+                  <p className="text-xl font-bold text-white">{s.value}</p>
+                  <p className="text-xs text-purple-300 mt-0.5">{s.label}</p>
                 </div>
               ))}
             </div>
@@ -258,17 +245,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Stats */}
-      <section className="py-14 bg-purple-50 border-y border-purple-100">
-        <div className="mx-auto max-w-5xl px-4 grid grid-cols-2 sm:grid-cols-4 gap-8 text-center">
-          {stats.map((s) => (
-            <div key={s.label}>
-              <p className="text-3xl font-bold text-purple-900">{s.value}</p>
-              <p className="text-sm text-gray-500 mt-1">{s.label}</p>
-            </div>
-          ))}
-        </div>
-      </section>
 
       {/* Features */}
       <section className="py-20 px-4">
