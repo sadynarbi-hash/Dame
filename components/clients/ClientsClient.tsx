@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus, Search, Users, Phone, Mail, Edit, Trash2, Cake } from "lucide-react";
+import { Plus, Search, Users, Edit, Trash2, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +15,26 @@ import type { Database } from "@/types/supabase";
 type ClientRow = Database["public"]["Tables"]["clients"]["Row"];
 interface ClientForm { nom: string; prenom: string; email: string; telephone: string; adresse: string; notes: string; date_naissance: string; }
 const emptyForm: ClientForm = { nom: "", prenom: "", email: "", telephone: "", adresse: "", notes: "", date_naissance: "" };
+
+function exportCSV(clients: ClientRow[]) {
+  const headers = ["Prénom", "Nom", "Téléphone", "Email", "Adresse", "Anniversaire", "Nb factures", "Total dépensé (FCFA)", "Dernière visite", "Notes"];
+  const rows = clients.map(c => [
+    c.prenom, c.nom, c.telephone, c.email ?? "", c.adresse ?? "",
+    c.date_naissance ? formatAnniversaire(c.date_naissance) : "",
+    c.nb_factures ?? 0, c.total_depense ?? 0,
+    c.derniere_visite ? formatDate(c.derniere_visite) : "",
+    (c.notes ?? "").replace(/\n/g, " "),
+  ]);
+  const csv = [headers, ...rows]
+    .map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(";"))
+    .join("\n");
+  const bom = "﻿"; // BOM pour Excel FR
+  const blob = new Blob([bom + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = `clients_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+}
 
 export function ClientsClient({ initialClients }: { initialClients: ClientRow[] }) {
   const [clients, setClients] = useState(initialClients);
@@ -46,9 +66,7 @@ export function ClientsClient({ initialClients }: { initialClients: ClientRow[] 
       } else {
         const result = await createClient_({ ...form, date_naissance: form.date_naissance || null });
         if (result?.error) { setError(result.error); return; }
-        // Optimistic: reload page for new client (ID comes from DB)
-        window.location.reload();
-        return;
+        window.location.reload(); return;
       }
       setModalOpen(false);
     });
@@ -65,54 +83,100 @@ export function ClientsClient({ initialClients }: { initialClients: ClientRow[] 
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-3 justify-between">
-        <div className="relative flex-1 max-w-sm">
+    <div className="space-y-4">
+      {/* Barre de recherche + actions */}
+      <div className="flex items-center gap-3 justify-between flex-wrap">
+        <div className="relative flex-1 min-w-[200px] max-w-sm">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input placeholder="Rechercher un client..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
         </div>
-        <Button onClick={openCreate}><Plus className="h-4 w-4" />Nouveau client</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => exportCSV(filtered)} disabled={filtered.length === 0}>
+            <Download className="h-4 w-4" />Exporter Excel
+          </Button>
+          <Button onClick={openCreate}><Plus className="h-4 w-4" />Nouveau client</Button>
+        </div>
       </div>
 
       <p className="text-sm text-muted-foreground">{filtered.length} client(s)</p>
 
       {filtered.length === 0 ? (
-        <Card><CardContent className="flex flex-col items-center py-16"><Users className="h-12 w-12 text-muted-foreground/40 mb-4" /><p className="text-muted-foreground">Aucun client</p><Button className="mt-4" onClick={openCreate}>Ajouter</Button></CardContent></Card>
+        <Card><CardContent className="flex flex-col items-center py-16">
+          <Users className="h-12 w-12 text-muted-foreground/40 mb-4" />
+          <p className="text-muted-foreground">Aucun client</p>
+          <Button className="mt-4" onClick={openCreate}>Ajouter</Button>
+        </CardContent></Card>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((client) => (
-            <Card key={client.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-5 space-y-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary font-bold">
-                      {client.prenom[0]}{client.nom[0]}
-                    </div>
-                    <div>
-                      <p className="font-semibold">{client.prenom} {client.nom}</p>
-                      {client.derniere_visite && <p className="text-xs text-muted-foreground">Dernière visite : {formatDate(client.derniere_visite)}</p>}
-                    </div>
-                  </div>
-                  <div className="flex gap-1">
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(client)}><Edit className="h-3.5 w-3.5" /></Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(client.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground"><Phone className="h-3.5 w-3.5" /><span>{client.telephone}</span></div>
-                  {client.email && <div className="flex items-center gap-2 text-sm text-muted-foreground"><Mail className="h-3.5 w-3.5" /><span className="truncate">{client.email}</span></div>}
-                  {client.date_naissance && <div className="flex items-center gap-2 text-sm text-muted-foreground"><Cake className="h-3.5 w-3.5" /><span>{formatAnniversaire(client.date_naissance)}</span></div>}
-                </div>
-                <div className="flex items-center justify-between pt-2 border-t">
-                  <div className="text-center"><p className="text-lg font-bold">{client.nb_factures}</p><p className="text-xs text-muted-foreground">Facture(s)</p></div>
-                  <div className="text-center"><p className="text-lg font-bold text-primary">{formatFCFA(client.total_depense)}</p><p className="text-xs text-muted-foreground">Total dépensé</p></div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+        <div className="rounded-xl border bg-white shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="border-b bg-muted/40">
+                <tr>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Client</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Téléphone</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Email</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Anniversaire</th>
+                  <th className="px-4 py-3 text-center font-medium text-muted-foreground">Factures</th>
+                  <th className="px-4 py-3 text-right font-medium text-muted-foreground">Total dépensé</th>
+                  <th className="px-4 py-3 text-left font-medium text-muted-foreground">Dernière visite</th>
+                  <th className="px-4 py-3 text-center font-medium text-muted-foreground">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {filtered.map((client) => (
+                  <tr key={client.id} className="hover:bg-muted/20 transition-colors">
+                    {/* Client */}
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-xs">
+                          {client.prenom[0]}{client.nom[0]}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-stone-800">{client.prenom} {client.nom}</p>
+                          {client.adresse && <p className="text-xs text-muted-foreground truncate max-w-[160px]">{client.adresse}</p>}
+                        </div>
+                      </div>
+                    </td>
+                    {/* Téléphone */}
+                    <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{client.telephone}</td>
+                    {/* Email */}
+                    <td className="px-4 py-3 text-muted-foreground max-w-[180px]">
+                      <span className="truncate block">{client.email ?? "—"}</span>
+                    </td>
+                    {/* Anniversaire */}
+                    <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
+                      {client.date_naissance ? formatAnniversaire(client.date_naissance) : "—"}
+                    </td>
+                    {/* Nb factures */}
+                    <td className="px-4 py-3 text-center font-semibold">{client.nb_factures ?? 0}</td>
+                    {/* Total dépensé */}
+                    <td className="px-4 py-3 text-right font-bold text-primary whitespace-nowrap">
+                      {formatFCFA(client.total_depense ?? 0)}
+                    </td>
+                    {/* Dernière visite */}
+                    <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
+                      {client.derniere_visite ? formatDate(client.derniere_visite) : "—"}
+                    </td>
+                    {/* Actions */}
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-center gap-1">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(client)}>
+                          <Edit className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDelete(client.id)}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
+      {/* Modal création / édition */}
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader><DialogTitle>{editId ? "Modifier le client" : "Nouveau client"}</DialogTitle></DialogHeader>
@@ -126,29 +190,25 @@ export function ClientsClient({ initialClients }: { initialClients: ClientRow[] 
             <div className="col-span-2 space-y-2">
               <Label>Date anniversaire</Label>
               <div className="flex gap-2">
-                <select
-                  className="flex-1 h-10 rounded-md border border-input bg-background px-3 text-sm"
+                <select className="flex-1 h-10 rounded-md border border-input bg-background px-3 text-sm"
                   value={form.date_naissance ? form.date_naissance.split("-")[2] : ""}
                   onChange={(e) => {
                     const jour = e.target.value;
                     const mois = form.date_naissance ? form.date_naissance.split("-")[1] : "01";
                     setForm(f => ({ ...f, date_naissance: jour ? `1900-${mois}-${jour}` : "" }));
-                  }}
-                >
+                  }}>
                   <option value="">Jour</option>
                   {Array.from({ length: 31 }, (_, i) => String(i + 1).padStart(2, "0")).map(j => (
                     <option key={j} value={j}>{j}</option>
                   ))}
                 </select>
-                <select
-                  className="flex-1 h-10 rounded-md border border-input bg-background px-3 text-sm"
+                <select className="flex-1 h-10 rounded-md border border-input bg-background px-3 text-sm"
                   value={form.date_naissance ? form.date_naissance.split("-")[1] : ""}
                   onChange={(e) => {
                     const mois = e.target.value;
                     const jour = form.date_naissance ? form.date_naissance.split("-")[2] : "01";
                     setForm(f => ({ ...f, date_naissance: mois ? `1900-${mois}-${jour || "01"}` : "" }));
-                  }}
-                >
+                  }}>
                   <option value="">Mois</option>
                   {["01","02","03","04","05","06","07","08","09","10","11","12"].map((m, i) => (
                     <option key={m} value={m}>{["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"][i]}</option>
