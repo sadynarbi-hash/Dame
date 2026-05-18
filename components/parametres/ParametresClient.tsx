@@ -283,10 +283,6 @@ export function ParametresClient({ initialEntreprise }: { initialEntreprise: Ent
             </div>
           </div>
           <div className="space-y-2">
-            <Label>RIB / Coordonnées bancaires</Label>
-            <Input value={form.rib} onChange={(e) => setForm(f => ({ ...f, rib: e.target.value }))} />
-          </div>
-          <div className="space-y-2">
             <Label>Mentions légales (pied de facture)</Label>
             <Textarea value={form.mentionsLegales} onChange={(e) => setForm(f => ({ ...f, mentionsLegales: e.target.value }))} rows={3} />
           </div>
