@@ -43,7 +43,7 @@ export function LayoutClient({ children, nomSalon, alertesStock, logo, permissio
 
       {/* Contenu principal */}
       <div className="flex flex-1 flex-col overflow-hidden min-w-0">
-        <Header alertesStock={alertesStock} onMenuClick={() => setSidebarOpen(true)} />
+        <Header alertesStock={alertesStock} nomSalon={nomSalon} onMenuClick={() => setSidebarOpen(true)} />
         <main className="flex-1 overflow-y-auto p-4 lg:p-6">
           {children}
         </main>
