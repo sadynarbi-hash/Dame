@@ -53,7 +53,11 @@ export function FacturesClient({ initialFactures }: { initialFactures: FactureRo
     const q = search.toLowerCase();
     const nomClient = f.client ? `${f.client.prenom} ${f.client.nom}`.toLowerCase() : "";
     if (!f.numero.toLowerCase().includes(q) && !nomClient.includes(q)) return false;
-    if (filtreStatut !== "tous" && f.statut !== filtreStatut) return false;
+    if (filtreStatut !== "tous") {
+      const paye = f.montant_paye ?? 0;
+      const statutReel: StatutFacture = (f.statut !== "payee" && paye > 0) ? "partielle" : f.statut;
+      if (statutReel !== filtreStatut) return false;
+    }
     const dateRef = f.date_emission;
     if (period === "aujourd_hui" && dateRef !== todayStr()) return false;
     if (period === "ce_mois" && dateRef < monthStart()) return false;
@@ -96,7 +100,7 @@ export function FacturesClient({ initialFactures }: { initialFactures: FactureRo
           ? {
               ...f,
               montant_paye: res.nouveauTotal ?? (f.montant_paye ?? 0) + montant,
-              statut: res.solde ? "payee" : "partielle" as StatutFacture,
+              statut: res.solde ? "payee" as StatutFacture : f.statut,
               date_paiement: res.solde ? todayStr() : f.date_paiement,
             }
           : f
@@ -146,7 +150,11 @@ export function FacturesClient({ initialFactures }: { initialFactures: FactureRo
             className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${filtreStatut === value ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}>
             {label}
             <span className="ml-1.5 text-xs opacity-70">
-              ({value === "tous" ? factures.length : factures.filter(f => f.statut === value).length})
+              ({value === "tous" ? factures.length : factures.filter(f => {
+              const p = f.montant_paye ?? 0;
+              const s: StatutFacture = (f.statut !== "payee" && p > 0) ? "partielle" : f.statut;
+              return s === value;
+            }).length})
             </span>
           </button>
         ))}
@@ -214,6 +222,8 @@ export function FacturesClient({ initialFactures }: { initialFactures: FactureRo
                   const paye = f.montant_paye ?? 0;
                   const restant = f.total_ttc - paye;
                   const estSolde = f.statut === "payee";
+                  // "partielle" est dérivé visuellement — jamais écrit en base
+                  const statutAffiche: StatutFacture = (!estSolde && paye > 0) ? "partielle" : f.statut;
                   return (
                     <tr key={f.id} className="hover:bg-muted/30 transition-colors">
                       <td className="px-4 py-3">
@@ -239,7 +249,7 @@ export function FacturesClient({ initialFactures }: { initialFactures: FactureRo
                       <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
                         {f.date_paiement ? formatDate(f.date_paiement) : "—"}
                       </td>
-                      <td className="px-4 py-3 text-center"><StatutFactureBadge statut={f.statut} /></td>
+                      <td className="px-4 py-3 text-center"><StatutFactureBadge statut={statutAffiche} /></td>
                       <td className="px-4 py-3">
                         <div className="flex items-center justify-center gap-1">
                           <Button variant="ghost" size="sm" asChild><Link href={`/factures/${f.id}`}>Voir</Link></Button>

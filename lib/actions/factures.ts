@@ -163,7 +163,7 @@ export async function ajouterPaiement(id: string, montantVerse: number) {
 
   const update: Record<string, unknown> = {
     montant_paye: estSolde ? facture.total_ttc : nouveauTotal,
-    statut: estSolde ? "payee" : "partielle",
+    statut: estSolde ? "payee" : "envoyee",
   };
   if (estSolde) update.date_paiement = new Date().toISOString().split("T")[0];
 
