@@ -27,7 +27,8 @@ function StatutBadge({ statut, trialEndsAt }: { statut: string | null; trialEnds
 
 function PlanBadge({ plan }: { plan: string | null }) {
   if (plan === "business") return <Badge className="bg-purple-100 text-purple-700 font-semibold">Business</Badge>;
-  return <Badge className="bg-slate-100 text-slate-600">Starter</Badge>;
+  if (plan === "starter") return <Badge className="bg-blue-100 text-blue-700">Starter</Badge>;
+  return <Badge className="bg-slate-100 text-slate-500">Gratuit</Badge>;
 }
 
 export function AdminComptesClient({ comptes }: { comptes: Compte[] }) {
@@ -38,7 +39,7 @@ export function AdminComptesClient({ comptes }: { comptes: Compte[] }) {
     startTransition(async () => { await setStatutCompte(userId, statut); });
   };
 
-  const changePlan = (userId: string, plan: "starter" | "business") => {
+  const changePlan = (userId: string, plan: "gratuit" | "starter" | "business") => {
     if (!confirm(`Confirmer : passer ce compte au plan "${plan}" ?`)) return;
     startTransition(async () => { await setPlanCompte(userId, plan); });
   };
@@ -98,9 +99,15 @@ export function AdminComptesClient({ comptes }: { comptes: Compte[] }) {
                   </div>
                 </td>
                 <td className="px-4 py-3">
-                  <div className="flex items-center justify-center gap-1">
+                  <div className="flex items-center justify-center gap-1 flex-wrap">
+                    {c.abonnement_plan !== "gratuit" && (
+                      <Button size="sm" variant="outline" className="text-slate-500 border-slate-200 h-7 text-xs" disabled={isPending}
+                        onClick={() => changePlan(c.user_id, "gratuit")}>
+                        → Gratuit
+                      </Button>
+                    )}
                     {c.abonnement_plan !== "starter" && (
-                      <Button size="sm" variant="outline" className="text-slate-600 border-slate-200 h-7 text-xs" disabled={isPending}
+                      <Button size="sm" variant="outline" className="text-blue-600 border-blue-200 hover:bg-blue-50 h-7 text-xs" disabled={isPending}
                         onClick={() => changePlan(c.user_id, "starter")}>
                         → Starter
                       </Button>
@@ -123,6 +130,7 @@ export function AdminComptesClient({ comptes }: { comptes: Compte[] }) {
         <p className="font-medium text-foreground mb-2">Plans tarifaires</p>
         <p><span className="font-medium text-foreground">Starter — 25 000 FCFA/mois</span> : 100 factures/mois · 1 utilisateur · stock basique</p>
         <p><span className="font-medium text-foreground">Business — 35 000 FCFA/mois</span> : Factures illimitées · 5 utilisateurs · stock avancé + rapports bénéfices</p>
+        <p><span className="font-medium text-foreground">Gratuit — 0 FCFA</span> : 5 factures/mois · 1 utilisateur</p>
         <p className="text-xs mt-2">Pendant l&apos;essai actif, les utilisateurs ont accès au plan Business.</p>
       </div>
     </div>

@@ -349,7 +349,38 @@ export default function LandingPage() {
             </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+
+            {/* ── Gratuit ── */}
+            <div className="rounded-2xl bg-white p-8 shadow-sm border border-stone-200">
+              <p className="text-2xl font-extrabold mb-1" style={{ color: "#0f1f3d" }}>Gratuit</p>
+              <p className="text-sm mb-6" style={{ color: "#6b7280" }}>Pour découvrir l&apos;application</p>
+
+              <div className="mb-8">
+                <span className="text-3xl font-extrabold" style={{ color: "#0f1f3d" }}>0</span>
+                <span className="text-base font-semibold ml-1.5" style={{ color: "#6b7280" }}>FCFA/mois</span>
+              </div>
+
+              <ul className="space-y-0 mb-8">
+                {[
+                  "5 factures/mois",
+                  "1 utilisateur",
+                  "Clients et rendez-vous",
+                  "Gestion de stock basique",
+                ].map(f => (
+                  <li key={f} className="flex items-center gap-3 py-3 border-b border-stone-100 last:border-0">
+                    <CheckCircle className="h-4 w-4 shrink-0" style={{ color: "#22c55e" }} />
+                    <span className="text-sm" style={{ color: "#374151" }}>{f}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <Link href="/connexion">
+                <button className="w-full py-3 rounded-xl text-sm font-semibold border-2 transition-colors hover:bg-stone-50" style={{ borderColor: "#d1d5db", color: "#374151" }}>
+                  Commencer gratuitement
+                </button>
+              </Link>
+            </div>
 
             {/* ── Starter ── */}
             <div className="rounded-2xl bg-white p-8 shadow-sm border border-stone-200">

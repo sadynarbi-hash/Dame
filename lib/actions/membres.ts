@@ -56,7 +56,7 @@ export async function createMembre(data: {
     entreprise?.abonnement_plan ?? null,
     entreprise?.trial_ends_at ?? null
   );
-  if (plan === "starter") {
+  if (plan === "gratuit" || plan === "starter") {
     return { error: "La gestion des utilisateurs nécessite le plan Business (35 000 FCFA/mois)." };
   }
   const { count: countMembres } = await db

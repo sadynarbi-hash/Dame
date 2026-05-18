@@ -10,15 +10,18 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const { db, userId, isMembre, permissions } = ctx;
 
   const [{ data: entreprise }, { data: allStock }] = await Promise.all([
-    db.from("entreprises").select("nom, couleur_principale, logo, abonnement_statut, trial_ends_at").eq("user_id", userId).single(),
+    db.from("entreprises").select("nom, couleur_principale, logo, abonnement_statut, abonnement_plan, trial_ends_at").eq("user_id", userId).single(),
     db.from("stock").select("quantite, seuil_alerte").eq("user_id", userId),
   ]);
 
   // Vérification abonnement (pour le propriétaire uniquement)
   if (entreprise && !isMembre) {
     const statut = entreprise.abonnement_statut;
+    const plan = entreprise.abonnement_plan;
     const trialExpire = entreprise.trial_ends_at && new Date(entreprise.trial_ends_at) < new Date();
-    const accesCoupe = statut === "suspendu" || (statut === "trial" && trialExpire);
+    // Plan gratuit = accès toujours autorisé (avec restrictions)
+    const estGratuit = !plan || plan === "gratuit";
+    const accesCoupe = statut === "suspendu" || (statut === "trial" && trialExpire && !estGratuit);
     if (accesCoupe) redirect("/abonnement-expire");
   }
 

@@ -28,15 +28,19 @@ export async function createFacture(data: {
     entreprise?.abonnement_plan ?? null,
     entreprise?.trial_ends_at ?? null
   );
-  if (plan === "starter") {
+  if (plan === "gratuit" || plan === "starter") {
+    const limite = PLAN_LIMITS[plan].factures_mois;
     const debut = new Date(); debut.setDate(1); debut.setHours(0, 0, 0, 0);
     const { count: countMois } = await db
       .from("factures")
       .select("*", { count: "exact", head: true })
       .eq("user_id", userId)
       .gte("date_emission", debut.toISOString().slice(0, 10));
-    if ((countMois ?? 0) >= PLAN_LIMITS.starter.factures_mois) {
-      return { error: `Limite atteinte : le plan Starter est limité à ${PLAN_LIMITS.starter.factures_mois} factures par mois. Passez au plan Business pour des factures illimitées.` };
+    if ((countMois ?? 0) >= limite) {
+      const upgrade = plan === "gratuit"
+        ? "Passez au plan Starter (25 000 FCFA/mois) ou Business pour plus de factures."
+        : "Passez au plan Business pour des factures illimitées.";
+      return { error: `Limite atteinte : le plan ${plan === "gratuit" ? "Gratuit" : "Starter"} est limité à ${limite} factures par mois. ${upgrade}` };
     }
   }
 

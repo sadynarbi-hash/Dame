@@ -32,7 +32,7 @@ export async function setStatutCompte(userId: string, statut: "actif" | "suspend
   revalidatePath("/admin/comptes");
 }
 
-export async function setPlanCompte(userId: string, plan: "starter" | "business") {
+export async function setPlanCompte(userId: string, plan: "gratuit" | "starter" | "business") {
   await checkAdmin();
   const supabase = createServiceRoleClient();
   await supabase.from("entreprises").update({ abonnement_plan: plan }).eq("user_id", userId);
