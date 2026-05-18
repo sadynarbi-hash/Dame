@@ -6,13 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { CheckCircle, Calendar } from "lucide-react";
+import { CheckCircle, Calendar, User, Phone } from "lucide-react";
 
 type Service = { id: string; nom: string; prix_ttc: number; categorie: string };
 
-const HEURES = ["08:00", "08:30", "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
-  "12:00", "12:30", "13:00", "13:30", "14:00", "14:30", "15:00", "15:30",
-  "16:00", "16:30", "17:00", "17:30", "18:00"];
+const HEURES = [
+  "08:00","08:30","09:00","09:30","10:00","10:30","11:00","11:30",
+  "12:00","12:30","13:00","13:30","14:00","14:30","15:00","15:30",
+  "16:00","16:30","17:00","17:30","18:00",
+];
 
 function heureAjout(heure: string, minutes: number): string {
   const [h, m] = heure.split(":").map(Number);
@@ -20,7 +22,15 @@ function heureAjout(heure: string, minutes: number): string {
   return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
 }
 
-export function PriseRdvForm({ userId, services }: { userId: string; services: Service[] }) {
+export function PriseRdvForm({
+  userId,
+  services,
+  couleur = "#EC4899",
+}: {
+  userId: string;
+  services: Service[];
+  couleur?: string;
+}) {
   const [isPending, startTransition] = useTransition();
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,9 +40,8 @@ export function PriseRdvForm({ userId, services }: { userId: string; services: S
   });
   const [selectedServices, setSelectedServices] = useState<string[]>([]);
 
-  const toggleService = (id: string) => {
+  const toggleService = (id: string) =>
     setSelectedServices(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,10 +64,12 @@ export function PriseRdvForm({ userId, services }: { userId: string; services: S
 
   if (success) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
+      <div className="flex flex-col items-center justify-center py-12 gap-4 text-center">
         <CheckCircle className="h-16 w-16 text-green-500" />
         <h2 className="text-2xl font-bold">Rendez-vous confirmé !</h2>
-        <p className="text-muted-foreground max-w-sm">Votre demande a bien été enregistrée. Le salon vous contactera pour confirmer.</p>
+        <p className="text-muted-foreground max-w-sm">
+          Votre demande a bien été enregistrée. Le salon vous contactera pour confirmer.
+        </p>
       </div>
     );
   }
@@ -66,40 +77,51 @@ export function PriseRdvForm({ userId, services }: { userId: string; services: S
   const categories = Array.from(new Set(services.map(s => s.categorie)));
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="space-y-5">
       {/* Coordonnées */}
-      <div className="rounded-xl border bg-card p-5 space-y-4">
-        <h3 className="font-semibold flex items-center gap-2">Vos coordonnées</h3>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="space-y-3">
+        <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <User className="h-3.5 w-3.5" /> Vos coordonnées
+        </p>
+        <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
-            <Label htmlFor="prenom">Prénom *</Label>
-            <Input id="prenom" required value={form.clientPrenom} onChange={e => setForm(f => ({ ...f, clientPrenom: e.target.value }))} placeholder="Fatou" />
+            <Label htmlFor="prenom" className="text-xs">Prénom *</Label>
+            <Input id="prenom" required placeholder="Fatou" value={form.clientPrenom} onChange={e => setForm(f => ({ ...f, clientPrenom: e.target.value }))} />
           </div>
           <div className="space-y-1">
-            <Label htmlFor="nom">Nom *</Label>
-            <Input id="nom" required value={form.clientNom} onChange={e => setForm(f => ({ ...f, clientNom: e.target.value }))} placeholder="Diallo" />
+            <Label htmlFor="nom" className="text-xs">Nom *</Label>
+            <Input id="nom" required placeholder="Diallo" value={form.clientNom} onChange={e => setForm(f => ({ ...f, clientNom: e.target.value }))} />
           </div>
-          <div className="sm:col-span-2 space-y-1">
-            <Label htmlFor="tel">Téléphone *</Label>
-            <Input id="tel" required type="tel" value={form.clientTelephone} onChange={e => setForm(f => ({ ...f, clientTelephone: e.target.value }))} placeholder="77 000 00 00" />
-          </div>
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="tel" className="text-xs flex items-center gap-1">
+            <Phone className="h-3 w-3" /> Téléphone *
+          </Label>
+          <Input id="tel" required type="tel" placeholder="77 000 00 00" value={form.clientTelephone} onChange={e => setForm(f => ({ ...f, clientTelephone: e.target.value }))} />
         </div>
       </div>
 
+      <hr className="border-black/8" />
+
       {/* Date & heure */}
-      <div className="rounded-xl border bg-card p-5 space-y-4">
-        <h3 className="font-semibold flex items-center gap-2"><Calendar className="h-4 w-4" />Date & heure</h3>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="space-y-3">
+        <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <Calendar className="h-3.5 w-3.5" /> Date & heure
+        </p>
+        <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
-            <Label htmlFor="date">Date *</Label>
-            <Input id="date" required type="date" min={new Date().toISOString().split("T")[0]} value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} />
+            <Label htmlFor="date" className="text-xs">Date *</Label>
+            <Input
+              id="date" required type="date"
+              min={new Date().toISOString().split("T")[0]}
+              value={form.date}
+              onChange={e => setForm(f => ({ ...f, date: e.target.value }))}
+            />
           </div>
           <div className="space-y-1">
-            <Label htmlFor="heure">Heure *</Label>
+            <Label htmlFor="heure" className="text-xs">Heure *</Label>
             <select
-              id="heure"
-              required
-              value={form.heureDebut}
+              id="heure" required value={form.heureDebut}
               onChange={e => setForm(f => ({ ...f, heureDebut: e.target.value }))}
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             >
@@ -111,37 +133,63 @@ export function PriseRdvForm({ userId, services }: { userId: string; services: S
 
       {/* Services */}
       {services.length > 0 && (
-        <div className="rounded-xl border bg-card p-5 space-y-4">
-          <h3 className="font-semibold">Services souhaités</h3>
-          {categories.map(cat => (
-            <div key={cat}>
-              <p className="text-xs font-semibold uppercase text-muted-foreground mb-2">{cat}</p>
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                {services.filter(s => s.categorie === cat).map(s => (
-                  <label key={s.id} className={`flex items-center justify-between gap-2 rounded-lg border p-3 cursor-pointer transition-colors ${selectedServices.includes(s.id) ? "border-primary bg-primary/5" : "hover:bg-muted/40"}`}>
-                    <div className="flex items-center gap-2">
-                      <input type="checkbox" className="rounded" checked={selectedServices.includes(s.id)} onChange={() => toggleService(s.id)} />
-                      <span className="text-sm font-medium">{s.nom}</span>
-                    </div>
-                  </label>
-                ))}
+        <>
+          <hr className="border-black/8" />
+          <div className="space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Services souhaités</p>
+            {categories.map(cat => (
+              <div key={cat}>
+                <p className="text-[11px] font-semibold uppercase text-muted-foreground/60 mb-2">{cat}</p>
+                <div className="space-y-1.5">
+                  {services.filter(s => s.categorie === cat).map(s => {
+                    const checked = selectedServices.includes(s.id);
+                    return (
+                      <label
+                        key={s.id}
+                        className="flex items-center gap-3 rounded-xl border px-4 py-3 cursor-pointer transition-all"
+                        style={checked
+                          ? { borderColor: couleur, backgroundColor: `${couleur}12`, borderWidth: "2px" }
+                          : { borderColor: "rgba(0,0,0,0.08)" }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => toggleService(s.id)}
+                          className="rounded"
+                          style={{ accentColor: couleur }}
+                        />
+                        <span className="text-sm font-medium">{s.nom}</span>
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>
       )}
 
       {/* Notes */}
-      <div className="rounded-xl border bg-card p-5 space-y-2">
-        <Label htmlFor="notes">Message / notes (facultatif)</Label>
-        <Textarea id="notes" placeholder="Précisez votre demande..." value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} />
+      <div className="space-y-1">
+        <Label htmlFor="notes" className="text-xs text-muted-foreground">Message (facultatif)</Label>
+        <Textarea
+          id="notes" placeholder="Précisez votre demande..."
+          value={form.notes}
+          onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
+          rows={2}
+        />
       </div>
 
-      {error && <p className="text-sm text-destructive rounded-lg bg-destructive/10 p-3">{error}</p>}
+      {error && <p className="text-sm text-red-600 rounded-xl bg-red-50 px-4 py-3">{error}</p>}
 
-      <Button type="submit" className="w-full" size="lg" disabled={isPending}>
-        {isPending ? "Envoi en cours..." : "Confirmer ma demande"}
-      </Button>
+      <button
+        type="submit"
+        disabled={isPending}
+        className="w-full h-12 rounded-xl text-white font-semibold text-base transition-opacity disabled:opacity-60"
+        style={{ backgroundColor: couleur }}
+      >
+        {isPending ? "Envoi en cours..." : "Valider ma demande"}
+      </button>
     </form>
   );
 }
