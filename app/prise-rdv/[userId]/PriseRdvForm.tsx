@@ -123,7 +123,6 @@ export function PriseRdvForm({ userId, services }: { userId: string; services: S
                       <input type="checkbox" className="rounded" checked={selectedServices.includes(s.id)} onChange={() => toggleService(s.id)} />
                       <span className="text-sm font-medium">{s.nom}</span>
                     </div>
-                    <span className="text-sm text-muted-foreground shrink-0">{s.prix_ttc.toLocaleString("fr-FR")} FCFA</span>
                   </label>
                 ))}
               </div>
