@@ -52,8 +52,8 @@ function PlanSelect({ userId, current, isPending, onChange }: {
       }}
     >
       <option value="gratuit">Gratuit — 0 FCFA</option>
-      <option value="starter">Starter — 25 000 FCFA</option>
-      <option value="business">Business — 35 000 FCFA</option>
+      <option value="starter">Starter — 4 500 FCFA</option>
+      <option value="business">Business — 7 500 FCFA</option>
     </select>
   );
 }
@@ -141,8 +141,8 @@ export function AdminComptesClient({ comptes }: { comptes: Compte[] }) {
       <div className="rounded-xl border bg-muted/30 p-4 text-sm text-muted-foreground space-y-1">
         <p className="font-medium text-foreground mb-2">Plans tarifaires</p>
         <p><span className="font-medium text-foreground">Gratuit — 0 FCFA</span> : 5 factures/mois · 1 utilisateur</p>
-        <p><span className="font-medium text-foreground">Starter — 25 000 FCFA/mois</span> : 100 factures/mois · 1 utilisateur · stock basique</p>
-        <p><span className="font-medium text-foreground">Business — 35 000 FCFA/mois</span> : Factures illimitées · 5 utilisateurs · stock avancé + rapports</p>
+        <p><span className="font-medium text-foreground">Starter — 4 500 FCFA/mois</span> : 100 factures/mois · 1 utilisateur · stock basique</p>
+        <p><span className="font-medium text-foreground">Business — 7 500 FCFA/mois</span> : Factures illimitées · 5 utilisateurs · stock avancé + rapports</p>
         <p className="text-xs mt-2">Pendant l&apos;essai actif, les utilisateurs ont accès au plan Business.</p>
       </div>
     </div>

@@ -57,7 +57,7 @@ export async function createMembre(data: {
     entreprise?.trial_ends_at ?? null
   );
   if (plan === "gratuit" || plan === "starter") {
-    return { error: "La gestion des utilisateurs nécessite le plan Business (35 000 FCFA/mois)." };
+    return { error: "La gestion des utilisateurs nécessite le plan Business (7 500 FCFA/mois)." };
   }
   const { count: countMembres } = await db
     .from("membres_salon")

@@ -33,7 +33,7 @@ export default async function MouvementsStockPage({ searchParams }: { searchPara
         <div>
           <h2 className="text-2xl font-bold mb-2">Fonctionnalité Business</h2>
           <p className="text-muted-foreground max-w-md">
-            Le rapport des mouvements de stock et le calcul des bénéfices sont réservés au plan <strong>Business</strong> (35 000 FCFA/mois).
+            Le rapport des mouvements de stock et le calcul des bénéfices sont réservés au plan <strong>Business</strong> (7 500 FCFA/mois).
           </p>
         </div>
         <div className="rounded-xl border bg-white p-6 shadow-sm max-w-sm w-full text-left space-y-3">
@@ -41,7 +41,7 @@ export default async function MouvementsStockPage({ searchParams }: { searchPara
           {["Mouvements de stock & bénéfices", "Factures illimitées", "Jusqu'à 5 utilisateurs", "Support prioritaire"].map(f => (
             <div key={f} className="flex items-center gap-2 text-sm"><span className="text-green-500">✓</span>{f}</div>
           ))}
-          <p className="text-2xl font-bold pt-2">35 000 <span className="text-primary text-base font-normal">FCFA/mois</span></p>
+          <p className="text-2xl font-bold pt-2">7 500<span className="text-primary text-base font-normal">FCFA/mois</span></p>
         </div>
         <Button asChild variant="outline"><Link href="/stock">← Retour au stock</Link></Button>
       </div>

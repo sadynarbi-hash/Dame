@@ -38,7 +38,7 @@ export async function createFacture(data: {
       .gte("date_emission", debut.toISOString().slice(0, 10));
     if ((countMois ?? 0) >= limite) {
       const upgrade = plan === "gratuit"
-        ? "Passez au plan Starter (25 000 FCFA/mois) ou Business pour plus de factures."
+        ? "Passez au plan Starter (4 500 FCFA/mois) ou Business pour plus de factures."
         : "Passez au plan Business pour des factures illimitées.";
       return { error: `Limite atteinte : le plan ${plan === "gratuit" ? "Gratuit" : "Starter"} est limité à ${limite} factures par mois. ${upgrade}` };
     }

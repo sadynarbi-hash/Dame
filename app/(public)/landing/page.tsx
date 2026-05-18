@@ -388,7 +388,7 @@ export default function LandingPage() {
               <p className="text-sm mb-6" style={{ color: "#6b7280" }}>Pour les petites entreprises</p>
 
               <div className="mb-8">
-                <span className="text-3xl font-extrabold" style={{ color: "#0f1f3d" }}>25 000</span>
+                <span className="text-3xl font-extrabold" style={{ color: "#0f1f3d" }}>4 500</span>
                 <span className="text-base font-semibold ml-1.5" style={{ color: PINK }}>FCFA/mois</span>
               </div>
 
@@ -426,7 +426,7 @@ export default function LandingPage() {
               <p className="text-sm mb-6" style={{ color: "#6b7280" }}>Pour les entreprises en croissance</p>
 
               <div className="mb-8">
-                <span className="text-3xl font-extrabold" style={{ color: "#0f1f3d" }}>35 000</span>
+                <span className="text-3xl font-extrabold" style={{ color: "#0f1f3d" }}>7 500</span>
                 <span className="text-base font-semibold ml-1.5" style={{ color: PINK }}>FCFA/mois</span>
               </div>
 
