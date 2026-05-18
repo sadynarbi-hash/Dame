@@ -4,13 +4,14 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Send, CheckCircle, Clock, Trash2, CreditCard, Phone, Mail, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { StatutFactureBadge } from "@/components/shared/StatutBadge";
 import { FacturePdfButton } from "@/components/factures/FacturePdfButton";
-import { updateStatutFacture, deleteFacture } from "@/lib/actions/factures";
+import { updateStatutFacture, deleteFacture, ajouterPaiement } from "@/lib/actions/factures";
 import { formatFCFA, formatDate } from "@/lib/utils/formatters";
 import type { StatutFacture } from "@/types";
 
@@ -35,7 +36,7 @@ type Props = {
   facture: {
     id: string; numero: string; statut: StatutFacture;
     date_emission: string; date_echeance: string; date_paiement: string | null;
-    sous_total: number; montant_tva: number; total_ttc: number;
+    sous_total: number; montant_tva: number; total_ttc: number; montant_paye: number | null;
     notes: string | null; conditions: string | null;
     mode_paiement: string | null;
     client: { nom: string; prenom: string; telephone: string | null; email: string | null; adresse: string | null } | null;
@@ -53,17 +54,35 @@ export function FactureDetail({ facture, entreprise }: Props) {
   const [isPending, startTransition] = useTransition();
   const [paiementOpen, setPaiementOpen] = useState(false);
   const [modePaiement, setModePaiement] = useState("especes");
+  const [montantSaisi, setMontantSaisi] = useState("");
+  const [localPaye, setLocalPaye] = useState(facture.montant_paye ?? 0);
+  const [localStatut, setLocalStatut] = useState<StatutFacture>(facture.statut);
 
   const couleur = entreprise?.couleur_principale ?? "#7c3aed";
+  const estSolde = localStatut === "payee";
+  const restant = facture.total_ttc - localPaye;
+  const statutAffiche: StatutFacture = (!estSolde && localPaye > 0) ? "partielle" : localStatut;
 
   const handleStatut = (statut: StatutFacture) => {
     startTransition(async () => { await updateStatutFacture(facture.id, statut); });
   };
 
+  const openPaiementModal = () => {
+    setMontantSaisi(String(restant));
+    setPaiementOpen(true);
+  };
+
   const handlePayer = () => {
+    const montant = parseInt(montantSaisi);
+    if (!montant || montant <= 0) return;
     startTransition(async () => {
-      await updateStatutFacture(facture.id, "payee", modePaiement);
-      setPaiementOpen(false);
+      const res = await ajouterPaiement(facture.id, montant);
+      if (res?.success) {
+        const nouveauPaye = res.nouveauTotal as number;
+        setLocalPaye(nouveauPaye);
+        setLocalStatut(res.solde ? "payee" : "envoyee");
+        setPaiementOpen(false);
+      }
     });
   };
 
@@ -83,14 +102,18 @@ export function FactureDetail({ facture, entreprise }: Props) {
       <div className="flex items-center justify-between flex-wrap gap-2 print:hidden">
         <Button variant="ghost" size="sm" onClick={() => router.back()}><ArrowLeft className="h-4 w-4" />Retour</Button>
         <div className="flex items-center gap-2 flex-wrap">
-          <StatutFactureBadge statut={facture.statut} />
-          {facture.statut === "brouillon" && (
+          <StatutFactureBadge statut={statutAffiche} />
+          {localStatut === "brouillon" && (
             <Button variant="outline" size="sm" disabled={isPending} onClick={() => handleStatut("envoyee")}><Send className="h-4 w-4" />Envoyer</Button>
           )}
-          {facture.statut !== "payee" && (
-            <Button size="sm" className="bg-green-600 hover:bg-green-700" disabled={isPending} onClick={() => setPaiementOpen(true)}><CheckCircle className="h-4 w-4" />Payée</Button>
+          {!estSolde && (
+            <Button size="sm"
+              className={localPaye > 0 ? "bg-amber-500 hover:bg-amber-600" : "bg-green-600 hover:bg-green-700"}
+              disabled={isPending} onClick={openPaiementModal}>
+              <CheckCircle className="h-4 w-4" />{localPaye > 0 ? "Compléter" : "Payée"}
+            </Button>
           )}
-          {facture.statut === "envoyee" && (
+          {localStatut === "envoyee" && (
             <Button variant="outline" size="sm" disabled={isPending} onClick={() => handleStatut("en_retard")}><Clock className="h-4 w-4" /></Button>
           )}
           <Button variant="ghost" size="sm" className="text-destructive" disabled={isPending} onClick={handleDelete}><Trash2 className="h-4 w-4" /></Button>
@@ -182,6 +205,18 @@ export function FactureDetail({ facture, entreprise }: Props) {
             <span>Total</span>
             <span style={{ color: couleur }}>{formatFCFA(facture.total_ttc)}</span>
           </div>
+          {localPaye > 0 && (
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Déjà versé</span>
+              <span className="font-semibold text-green-600">{formatFCFA(localPaye)}</span>
+            </div>
+          )}
+          {!estSolde && localPaye > 0 && (
+            <div className="flex justify-between text-sm font-semibold">
+              <span className="text-muted-foreground">Restant dû</span>
+              <span className="text-red-500">{formatFCFA(restant)}</span>
+            </div>
+          )}
           {facture.mode_paiement && (
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Mode de paiement</span>
@@ -222,22 +257,57 @@ export function FactureDetail({ facture, entreprise }: Props) {
         <FacturePdfButton facture={facture} couleur={couleur} />
       </div>
 
-      {/* Dialog mode de paiement */}
+      {/* Dialog paiement */}
       <Dialog open={paiementOpen} onOpenChange={setPaiementOpen}>
         <DialogContent className="sm:max-w-xs">
-          <DialogHeader><DialogTitle>Mode de paiement</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>{localPaye > 0 ? "Compléter le paiement" : "Enregistrer un paiement"}</DialogTitle>
+          </DialogHeader>
           <div className="space-y-3 py-2">
-            <Label>Comment le client a-t-il payé ?</Label>
-            <Select value={modePaiement} onValueChange={setModePaiement}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {MODES_PAIEMENT.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <div className="rounded-lg bg-muted/50 p-3 space-y-1 text-sm">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Total facture</span>
+                <span className="font-semibold">{formatFCFA(facture.total_ttc)}</span>
+              </div>
+              {localPaye > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Déjà versé</span>
+                  <span className="font-semibold text-amber-600">{formatFCFA(localPaye)}</span>
+                </div>
+              )}
+              <div className="flex justify-between font-semibold">
+                <span className="text-muted-foreground">Restant dû</span>
+                <span className="text-red-500">{formatFCFA(restant)}</span>
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>Montant versé (FCFA)</Label>
+              <Input
+                type="number" min={1} max={restant}
+                value={montantSaisi}
+                onChange={(e) => setMontantSaisi(e.target.value)}
+                placeholder={String(restant)}
+              />
+            </div>
+            {parseInt(montantSaisi) > 0 && parseInt(montantSaisi) < restant && (
+              <p className="text-xs text-amber-600">Paiement partiel — il restera <strong>{formatFCFA(restant - parseInt(montantSaisi))}</strong> à régler.</p>
+            )}
+            {parseInt(montantSaisi) >= restant && (
+              <p className="text-xs text-green-600 font-medium">La facture sera entièrement soldée.</p>
+            )}
+            <div className="space-y-1">
+              <Label>Mode de paiement</Label>
+              <Select value={modePaiement} onValueChange={setModePaiement}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {MODES_PAIEMENT.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setPaiementOpen(false)}>Annuler</Button>
-            <Button className="bg-green-600 hover:bg-green-700" disabled={isPending} onClick={handlePayer}>
+            <Button className="bg-green-600 hover:bg-green-700" disabled={isPending || !parseInt(montantSaisi)} onClick={handlePayer}>
               <CheckCircle className="h-4 w-4" />Confirmer
             </Button>
           </DialogFooter>
