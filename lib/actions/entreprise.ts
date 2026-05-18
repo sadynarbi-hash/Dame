@@ -33,18 +33,23 @@ export async function uploadLogo(formData: FormData) {
   const file = formData.get("logo") as File;
   if (!file || file.size === 0) return { error: "Aucun fichier sélectionné" };
   if (file.size > 2 * 1024 * 1024) return { error: "Le logo doit faire moins de 2 Mo" };
-  if (!["image/jpeg", "image/png", "image/webp", "image/svg+xml"].includes(file.type)) {
-    return { error: "Format non supporté (JPG, PNG, WEBP, SVG uniquement)" };
+  const MIME_TO_EXT: Record<string, string> = {
+    "image/jpeg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp",
+  };
+  if (!(file.type in MIME_TO_EXT)) {
+    return { error: "Format non supporté (JPG, PNG, WEBP uniquement)" };
   }
 
-  const ext = file.name.split(".").pop();
+  const ext = MIME_TO_EXT[file.type];
   const path = `${user.id}/logo.${ext}`;
 
   const { error: uploadError } = await supabase.storage
     .from("logos")
     .upload(path, file, { upsert: true, contentType: file.type });
 
-  if (uploadError) return { error: uploadError.message };
+  if (uploadError) return { error: "Erreur lors de l'envoi du fichier" };
 
   const { data: { publicUrl } } = supabase.storage.from("logos").getPublicUrl(path);
 

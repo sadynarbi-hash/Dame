@@ -3,7 +3,7 @@ import { getComptes } from "@/lib/actions/admin";
 import { AdminComptesClient } from "./AdminComptesClient";
 import { redirect } from "next/navigation";
 
-const ADMIN_EMAIL = "sadynarbi@gmail.com";
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "";
 
 export default async function AdminComptesPage() {
   const supabase = createClient();

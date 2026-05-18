@@ -24,7 +24,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   const alertesStock = (allStock ?? []).filter((a: { quantite: number; seuil_alerte: number }) => a.quantite <= a.seuil_alerte).length;
   const nomSalon = entreprise?.nom ?? "Mon Salon";
-  const couleur = entreprise?.couleur_principale ?? "#8B5CF6";
+  const rawCouleur = entreprise?.couleur_principale ?? "#8B5CF6";
+  const couleur = /^#[0-9A-Fa-f]{6}$/.test(rawCouleur) ? rawCouleur : "#8B5CF6";
   const logo = entreprise?.logo ?? null;
 
   return (

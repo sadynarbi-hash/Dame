@@ -4,7 +4,7 @@ import { createServiceRoleClient } from "@/lib/supabase/service-role";
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
-const ADMIN_EMAIL = "sadynarbi@gmail.com";
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? "";
 
 async function checkAdmin() {
   const supabase = createClient();

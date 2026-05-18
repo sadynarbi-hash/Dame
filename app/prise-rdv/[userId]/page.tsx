@@ -22,7 +22,8 @@ export default async function PriseRdvPage({ params }: { params: { userId: strin
   const { entreprise, services } = await getSalonPublic(params.userId);
   if (!entreprise) notFound();
 
-  const couleur = entreprise.couleur_principale ?? "#EC4899";
+  const rawCouleur = entreprise.couleur_principale ?? "#EC4899";
+  const couleur = /^#[0-9A-Fa-f]{6}$/.test(rawCouleur) ? rawCouleur : "#EC4899";
 
   const header = (
     <div className="text-center mb-6">
