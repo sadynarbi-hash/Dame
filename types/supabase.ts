@@ -89,7 +89,7 @@ export type Database = {
           id: string; user_id: string; client_id: string | null; numero: string;
           statut: "brouillon" | "envoyee" | "payee" | "en_retard";
           date_emission: string; date_echeance: string; date_paiement: string | null;
-          sous_total: number; montant_tva: number; total_ttc: number;
+          sous_total: number; montant_tva: number; total_ttc: number; montant_paye: number | null;
           notes: string | null; conditions: string | null;
           mode_paiement: string | null;
           created_at: string; updated_at: string;
@@ -98,7 +98,7 @@ export type Database = {
           id?: string; user_id: string; client_id?: string | null; numero: string;
           statut?: "brouillon" | "envoyee" | "payee" | "en_retard";
           date_emission: string; date_echeance: string; date_paiement?: string | null;
-          sous_total: number; montant_tva: number; total_ttc: number;
+          sous_total: number; montant_tva: number; total_ttc: number; montant_paye?: number | null;
           notes?: string | null; conditions?: string | null;
           mode_paiement?: string | null;
           created_at?: string; updated_at?: string;
@@ -107,7 +107,7 @@ export type Database = {
           id?: string; user_id?: string; client_id?: string | null; numero?: string;
           statut?: "brouillon" | "envoyee" | "payee" | "en_retard";
           date_emission?: string; date_echeance?: string; date_paiement?: string | null;
-          sous_total?: number; montant_tva?: number; total_ttc?: number;
+          sous_total?: number; montant_tva?: number; total_ttc?: number; montant_paye?: number | null;
           notes?: string | null; conditions?: string | null;
           mode_paiement?: string | null;
           created_at?: string; updated_at?: string;

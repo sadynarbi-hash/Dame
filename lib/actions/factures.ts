@@ -122,7 +122,7 @@ export async function createFacture(data: {
   redirect(`/factures/${facture.id}`);
 }
 
-export async function updateStatutFacture(id: string, statut: StatutFacture, modePaiement?: string) {
+export async function updateStatutFacture(id: string, statut: StatutFacture, modePaiement?: string, montantPaye?: number) {
   const ctx = await getDataContext();
   if (!ctx) return { error: "Non authentifié" };
   const { db, userId } = ctx;
@@ -131,6 +131,7 @@ export async function updateStatutFacture(id: string, statut: StatutFacture, mod
   if (statut === "payee") {
     update.date_paiement = new Date().toISOString().split("T")[0];
     if (modePaiement) update.mode_paiement = modePaiement;
+    if (montantPaye !== undefined) update.montant_paye = montantPaye;
   }
 
   const { error } = await db.from("factures").update(update).eq("id", id).eq("user_id", userId);

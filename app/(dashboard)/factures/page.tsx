@@ -9,9 +9,9 @@ export default async function FacturesPage() {
 
   const { data: factures } = await db
     .from("factures")
-    .select("*, client:clients(id, nom, prenom)")
+    .select("id, numero, statut, date_emission, date_echeance, date_paiement, total_ttc, montant_paye, client:clients(id, nom, prenom)")
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
 
-  return <FacturesClient initialFactures={factures ?? []} />;
+  return <FacturesClient initialFactures={(factures ?? []) as never} />;
 }
