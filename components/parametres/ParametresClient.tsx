@@ -274,7 +274,7 @@ export function ParametresClient({ initialEntreprise }: { initialEntreprise: Ent
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label>SIRET / RCCM</Label>
+              <Label>NINEA</Label>
               <Input value={form.siret} onChange={(e) => setForm(f => ({ ...f, siret: e.target.value }))} />
             </div>
             <div className="space-y-2">
