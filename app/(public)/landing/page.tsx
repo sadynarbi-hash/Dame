@@ -333,74 +333,98 @@ export default function LandingPage() {
       </section>
 
       {/* ══ PRICING ══ */}
-      <section id="pricing" className="py-20 px-5" style={{ background: `linear-gradient(180deg, #0a0118 0%, #130428 100%)` }}>
-        <div className="mx-auto max-w-5xl">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-extrabold text-white tracking-tight">
-              Des tarifs <span style={{ color: PINK }}>simples</span> et{" "}
-              <span style={{ background: `linear-gradient(90deg, ${PINK}, ${PURPLE})`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>adaptés</span>
+      <section id="pricing" className="py-20 px-5" style={{ backgroundColor: "#f1f4f9" }}>
+        <div className="mx-auto max-w-4xl">
+          <div className="text-center mb-4">
+            <h2 className="text-3xl font-extrabold tracking-tight" style={{ color: "#0f1f3d" }}>
+              Des tarifs <span style={{ color: PINK }}>simples</span> et adaptés
             </h2>
           </div>
+          <p className="text-center text-sm mb-3" style={{ color: "#6b7280" }}>
+            Essai gratuit 14 jours — sans carte bancaire
+          </p>
+          <div className="flex justify-center mb-10">
+            <span className="inline-flex items-center gap-1.5 text-xs font-medium px-4 py-1.5 rounded-full border" style={{ backgroundColor: "rgba(255,45,120,0.07)", borderColor: "rgba(255,45,120,0.2)", color: PINK }}>
+              ✦ Tous les plans incluent l&apos;accès mobile (PWA)
+            </span>
+          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Gratuit */}
-            <div className="rounded-2xl p-7 border" style={{ backgroundColor: CARD, borderColor: "rgba(255,255,255,0.08)" }}>
-              <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: "rgba(255,255,255,0.4)" }}>Gratuit</p>
-              <p className="text-3xl font-extrabold text-white mb-0.5">0 <span className="text-lg font-semibold" style={{ color: "rgba(255,255,255,0.4)" }}>FCFA</span></p>
-              <p className="text-xs mb-6" style={{ color: "rgba(255,255,255,0.35)" }}>Pour démarrer sereinement</p>
-              <ul className="space-y-3 mb-8">
-                {["Jusqu'à 50 clients", "Factures illimitées", "Rendez-vous"].map(f => (
-                  <li key={f} className="flex items-center gap-2 text-sm" style={{ color: "rgba(255,255,255,0.7)" }}>
-                    <CheckCircle className="h-4 w-4 shrink-0" style={{ color: PURPLE }} />{f}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+
+            {/* ── Starter ── */}
+            <div className="rounded-2xl bg-white p-8 shadow-sm border border-stone-200">
+              <p className="text-2xl font-extrabold mb-1" style={{ color: "#0f1f3d" }}>Starter</p>
+              <p className="text-sm mb-6" style={{ color: "#6b7280" }}>Pour les petites entreprises</p>
+
+              <div className="mb-8">
+                <span className="text-3xl font-extrabold" style={{ color: "#0f1f3d" }}>25 000</span>
+                <span className="text-base font-semibold ml-1.5" style={{ color: PINK }}>FCFA/mois</span>
+              </div>
+
+              <ul className="space-y-0 mb-8">
+                {[
+                  "100 factures/mois",
+                  "1 utilisateur",
+                  "Gestion de stock basique",
+                  "Support email",
+                ].map(f => (
+                  <li key={f} className="flex items-center gap-3 py-3 border-b border-stone-100 last:border-0">
+                    <CheckCircle className="h-4 w-4 shrink-0" style={{ color: "#22c55e" }} />
+                    <span className="text-sm" style={{ color: "#374151" }}>{f}</span>
                   </li>
                 ))}
               </ul>
+
               <Link href="/connexion">
-                <button className="w-full py-2.5 rounded-xl text-sm font-semibold border transition-colors hover:bg-white/8" style={{ borderColor: "rgba(255,255,255,0.15)", color: "rgba(255,255,255,0.7)" }}>
-                  Commencer gratuitement
+                <button className="w-full py-3 rounded-xl text-sm font-semibold border-2 transition-colors hover:bg-stone-50" style={{ borderColor: "#d1d5db", color: "#374151" }}>
+                  Commencer
                 </button>
               </Link>
             </div>
 
-            {/* Pro — highlighted */}
-            <div className="rounded-2xl p-7 relative overflow-hidden border-2" style={{ backgroundColor: CARD, borderColor: PINK, boxShadow: `0 0 40px rgba(255,45,120,0.2)` }}>
-              <div className="absolute top-4 right-4 text-[10px] font-bold px-2.5 py-1 rounded-full text-white" style={{ background: `linear-gradient(135deg, ${PINK}, ${PURPLE})` }}>Le plus choisi</div>
-              <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: PINK }}>Pro</p>
-              <p className="text-3xl font-extrabold text-white mb-0.5">3 000 <span className="text-lg font-semibold" style={{ color: "rgba(255,255,255,0.4)" }}>FCFA</span></p>
-              <p className="text-xs mb-6" style={{ color: "rgba(255,255,255,0.35)" }}>Pour développer votre salon</p>
-              <ul className="space-y-3 mb-8">
-                {["Clients illimités", "Gestion du stock", "Rapports et statistiques", "Support prioritaire"].map(f => (
-                  <li key={f} className="flex items-center gap-2 text-sm" style={{ color: "rgba(255,255,255,0.85)" }}>
-                    <CheckCircle className="h-4 w-4 shrink-0" style={{ color: PINK }} />{f}
-                  </li>
-                ))}
-              </ul>
-              <Link href="/connexion">
-                <button className="w-full py-2.5 rounded-xl text-sm font-bold text-white" style={{ background: `linear-gradient(135deg, ${PINK}, ${PURPLE})`, boxShadow: `0 0 20px rgba(255,45,120,0.4)` }}>
-                  Essai gratuit 7 jours
-                </button>
-              </Link>
-            </div>
+            {/* ── Business — highlighted ── */}
+            <div className="rounded-2xl bg-white p-8 shadow-lg border-2 relative" style={{ borderColor: "#0f1f3d" }}>
+              {/* Badge POPULAIRE */}
+              <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-bold text-white" style={{ background: `linear-gradient(135deg, #f97316, #0f1f3d)` }}>
+                  ★ POPULAIRE
+                </span>
+              </div>
 
-            {/* Premium */}
-            <div className="rounded-2xl p-7 border" style={{ backgroundColor: CARD, borderColor: "rgba(255,255,255,0.08)" }}>
-              <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: "rgba(255,255,255,0.4)" }}>Premium</p>
-              <p className="text-3xl font-extrabold text-white mb-0.5">5 000 <span className="text-lg font-semibold" style={{ color: "rgba(255,255,255,0.4)" }}>FCFA</span></p>
-              <p className="text-xs mb-6" style={{ color: "rgba(255,255,255,0.35)" }}>Pour aller encore plus loin</p>
-              <ul className="space-y-3 mb-8">
-                {["Tout dans Pro", "Sauvegarde automatique", "Multi-utilisateurs", "Support dédié"].map(f => (
-                  <li key={f} className="flex items-center gap-2 text-sm" style={{ color: "rgba(255,255,255,0.7)" }}>
-                    <CheckCircle className="h-4 w-4 shrink-0" style={{ color: PURPLE }} />{f}
+              <p className="text-2xl font-extrabold mb-1" style={{ color: "#0f1f3d" }}>Business</p>
+              <p className="text-sm mb-6" style={{ color: "#6b7280" }}>Pour les entreprises en croissance</p>
+
+              <div className="mb-8">
+                <span className="text-3xl font-extrabold" style={{ color: "#0f1f3d" }}>35 000</span>
+                <span className="text-base font-semibold ml-1.5" style={{ color: PINK }}>FCFA/mois</span>
+              </div>
+
+              <ul className="space-y-0 mb-8">
+                {[
+                  "Factures illimitées",
+                  "5 utilisateurs",
+                  "Gestion de stock avancée",
+                  "Application mobile",
+                  "Support prioritaire",
+                ].map(f => (
+                  <li key={f} className="flex items-center gap-3 py-3 border-b border-stone-100 last:border-0">
+                    <CheckCircle className="h-4 w-4 shrink-0" style={{ color: "#22c55e" }} />
+                    <span className="text-sm" style={{ color: "#374151" }}>{f}</span>
                   </li>
                 ))}
               </ul>
+
               <Link href="/connexion">
-                <button className="w-full py-2.5 rounded-xl text-sm font-semibold border transition-colors hover:bg-white/8" style={{ borderColor: "rgba(255,255,255,0.15)", color: "rgba(255,255,255,0.7)" }}>
-                  Essai gratuit 7 jours
+                <button className="w-full py-3 rounded-xl text-sm font-semibold border-2 transition-colors hover:bg-stone-50" style={{ borderColor: "#d1d5db", color: "#374151" }}>
+                  Commencer
                 </button>
               </Link>
             </div>
           </div>
+
+          <p className="text-center text-xs mt-8" style={{ color: "#9ca3af" }}>
+            Résiliez à tout moment · Paiement par Wave, Orange Money ou virement
+          </p>
         </div>
       </section>
 
