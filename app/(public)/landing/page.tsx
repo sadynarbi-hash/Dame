@@ -134,93 +134,125 @@ export default function LandingPage() {
             </div>
 
             {/* Téléphone */}
-            <div className="shrink-0 flex justify-center pb-0">
-              <div className="relative mt-2">
-                <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-44 h-6 blur-2xl rounded-full opacity-60" style={{ backgroundColor: "#d4547a" }} />
+            <div className="shrink-0 flex justify-center">
+              <div className="relative" style={{ marginTop: "8px" }}>
+                {/* Ombre portée rose */}
+                <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 w-48 h-8 blur-2xl rounded-full" style={{ backgroundColor: "#b5416a", opacity: 0.45 }} />
 
-                {/* Cadre téléphone */}
-                <div className="relative w-[248px] h-[510px] rounded-[42px] border-[9px] shadow-[0_40px_80px_rgba(0,0,0,0.5)] overflow-hidden" style={{ backgroundColor: "#111", borderColor: "#1e1e1e" }}>
-                  {/* Status */}
-                  <div className="relative h-7 flex items-center justify-between px-4" style={{ backgroundColor: "#1c1917" }}>
-                    <span className="text-white text-[9px] font-semibold">9:41</span>
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-20 h-4 rounded-b-2xl" style={{ backgroundColor: "#111" }} />
-                    <span className="text-white/40 text-[8px]">WiFi ●●●</span>
+                {/* Boutons latéraux gauche */}
+                <div className="absolute rounded-l-sm" style={{ left: "-4px", top: "88px", width: "4px", height: "28px", backgroundColor: "#6b1a3a" }} />
+                <div className="absolute rounded-l-sm" style={{ left: "-4px", top: "128px", width: "4px", height: "44px", backgroundColor: "#6b1a3a" }} />
+                <div className="absolute rounded-l-sm" style={{ left: "-4px", top: "182px", width: "4px", height: "44px", backgroundColor: "#6b1a3a" }} />
+                {/* Bouton droit */}
+                <div className="absolute rounded-r-sm" style={{ right: "-4px", top: "118px", width: "4px", height: "60px", backgroundColor: "#6b1a3a" }} />
+
+                {/* Cadre téléphone — couleur rose berry */}
+                <div className="relative flex flex-col rounded-[42px] overflow-hidden"
+                  style={{
+                    width: "262px", height: "562px",
+                    border: "10px solid #8B2255",
+                    boxShadow: "0 40px 80px rgba(139,34,85,0.45), inset 0 0 0 1px rgba(255,200,220,0.15)",
+                    backgroundColor: "#fdf8f5",
+                  }}>
+
+                  {/* Status bar */}
+                  <div className="relative flex items-center justify-between shrink-0 px-5" style={{ height: "36px", backgroundColor: "#fdf8f5" }}>
+                    <span className="font-bold text-[10px] text-stone-800">20:51</span>
+                    {/* Dynamic island */}
+                    <div className="absolute top-2 left-1/2 -translate-x-1/2 rounded-full" style={{ width: "72px", height: "18px", backgroundColor: "#111" }} />
+                    <div className="flex items-center gap-0.5 text-[9px] text-stone-700 font-medium">
+                      <span>●●●</span><span className="ml-0.5">4G</span>
+                      <span className="ml-0.5">🔋</span>
+                    </div>
                   </div>
 
-                  {/* App */}
-                  <div className="flex" style={{ height: "calc(100% - 28px)" }}>
-                    {/* Sidebar */}
-                    <div className="w-[62px] flex flex-col pt-2 pb-4 shrink-0" style={{ backgroundColor: "#1e1419" }}>
-                      <div className="flex justify-center mb-3">
-                        <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: "linear-gradient(135deg, #b5416a, #7c2048)" }}>
-                          <Scissors className="h-3 w-3 text-white" />
+                  {/* Contenu scrollable */}
+                  <div className="flex-1 overflow-hidden flex flex-col" style={{ backgroundColor: "#fdf8f5" }}>
+
+                    {/* Carte hero revenus */}
+                    <div className="mx-3 mt-1 rounded-2xl p-3.5 shrink-0" style={{ background: "linear-gradient(135deg, #b5416a 0%, #7c2048 100%)" }}>
+                      <p className="text-[8px] text-rose-200/80 mb-0.5">Chiffre du mois</p>
+                      <p className="text-[22px] font-bold text-white leading-none tracking-tight">1 250 000 F</p>
+                      <div className="flex gap-2 mt-2.5">
+                        <div className="flex-1 rounded-xl px-2 py-1.5" style={{ backgroundColor: "rgba(255,255,255,0.15)" }}>
+                          <p className="text-[6.5px] text-rose-200/70">Clientes</p>
+                          <p className="text-[11px] font-bold text-white">147</p>
+                        </div>
+                        <div className="flex-1 rounded-xl px-2 py-1.5" style={{ backgroundColor: "rgba(255,255,255,0.15)" }}>
+                          <p className="text-[6.5px] text-rose-200/70">RDV ce mois</p>
+                          <p className="text-[11px] font-bold text-white">38</p>
+                        </div>
+                        <div className="flex-1 rounded-xl px-2 py-1.5" style={{ backgroundColor: "rgba(255,255,255,0.15)" }}>
+                          <p className="text-[6.5px] text-rose-200/70">En attente</p>
+                          <p className="text-[11px] font-bold text-white">8</p>
                         </div>
                       </div>
-                      {[
-                        { icon: BarChart3, label: "Accueil", active: true },
-                        { icon: FileText, label: "Factures" },
-                        { icon: Users, label: "Clientes" },
-                        { icon: Scissors, label: "Services" },
-                        { icon: Package, label: "Stock" },
-                        { icon: Calendar, label: "RDV" },
-                        { icon: TrendingDown, label: "Charges" },
-                      ].map(({ icon: Icon, label, active }) => (
-                        <div key={label} className="mx-1 mb-0.5 px-1 py-1.5 rounded-xl flex flex-col items-center gap-0.5" style={active ? { background: "linear-gradient(135deg, #b5416a55, #7c204866)" } : {}}>
-                          <Icon className="h-3 w-3" style={{ color: active ? "#f9b8cc" : "#ffffff44" }} />
-                          <span className="text-[6px] text-center leading-tight" style={{ color: active ? "#f9b8cc" : "#ffffff30" }}>{label}</span>
-                        </div>
-                      ))}
                     </div>
 
-                    {/* Contenu */}
-                    <div className="flex-1 p-2.5 overflow-hidden" style={{ backgroundColor: "#fdf8f5" }}>
-                      <p className="text-[8.5px] font-bold text-stone-800 mb-1.5">Tableau de bord</p>
-                      <div className="grid grid-cols-2 gap-1 mb-2">
+                    {/* Barre recherche */}
+                    <div className="mx-3 mt-2 flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 shrink-0" style={{ backgroundColor: "#fff", border: "1px solid #f0d0da" }}>
+                      <span className="text-[9px] text-stone-400">🔍</span>
+                      <span className="text-[8px] text-stone-400">Rechercher une cliente...</span>
+                    </div>
+
+                    {/* Filtres */}
+                    <div className="flex gap-1.5 mx-3 mt-1.5 shrink-0">
+                      <span className="px-2.5 py-1 rounded-full text-[7px] font-semibold text-white" style={{ backgroundColor: "#b5416a" }}>Toutes</span>
+                      <span className="px-2.5 py-1 rounded-full text-[7px] text-stone-500" style={{ border: "1px solid #e5d0d6" }}>Payées</span>
+                      <span className="px-2.5 py-1 rounded-full text-[7px] text-stone-500" style={{ border: "1px solid #e5d0d6" }}>En attente</span>
+                    </div>
+
+                    {/* Liste transactions */}
+                    <div className="mx-3 mt-2 flex-1 overflow-hidden">
+                      <p className="text-[6.5px] font-semibold uppercase tracking-widest text-stone-400 mb-1.5">Factures récentes</p>
+                      <div className="space-y-1.5">
                         {[
-                          { label: "Revenus", value: "1,2M FCFA", bg: "#fff0f3", color: "#b5416a" },
-                          { label: "Clientes", value: "147", bg: "#fef3e8", color: "#c47a1a" },
-                          { label: "Factures", value: "8 att.", bg: "#fefce8", color: "#a37c0a" },
-                          { label: "RDV auj.", value: "5", bg: "#f0fdf4", color: "#16803c" },
-                        ].map((s) => (
-                          <div key={s.label} className="rounded-xl p-1.5" style={{ backgroundColor: s.bg }}>
-                            <p className="text-[5.5px] text-stone-400 mb-0.5">{s.label}</p>
-                            <p className="text-[8px] font-bold" style={{ color: s.color }}>{s.value}</p>
+                          { initials: "AM", name: "Aminata M.", ref: "FAC-2026-0042", time: "14:32", amount: "45 000", paid: true },
+                          { initials: "FK", name: "Fatou K.", ref: "FAC-2026-0041", time: "11:20", amount: "28 500", paid: false },
+                          { initials: "MS", name: "Marième S.", ref: "FAC-2026-0040", time: "09:15", amount: "62 000", paid: true },
+                          { initials: "KD", name: "Kadiatou D.", ref: "FAC-2026-0039", time: "Hier", amount: "35 000", paid: true },
+                        ].map((item) => (
+                          <div key={item.ref} className="flex items-center gap-2 rounded-xl px-2.5 py-2" style={{ backgroundColor: "#fff", border: "1px solid #f5e0e8" }}>
+                            <div className="w-8 h-8 rounded-full flex items-center justify-center text-[8px] font-bold text-white shrink-0" style={{ background: "linear-gradient(135deg, #b5416a, #7c2048)" }}>
+                              {item.initials}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-[8px] font-semibold text-stone-800 truncate">{item.name}</p>
+                              <p className="text-[6.5px] text-stone-400">{item.ref} · {item.time}</p>
+                            </div>
+                            <div className="text-right shrink-0">
+                              <p className="text-[8.5px] font-bold text-stone-800">{item.amount} F</p>
+                              <p className="text-[6px] font-medium" style={{ color: item.paid ? "#16803c" : "#b5416a" }}>{item.paid ? "Payée" : "En att."}</p>
+                            </div>
+                            <span className="text-[10px] text-stone-300 shrink-0">›</span>
                           </div>
                         ))}
                       </div>
-                      <p className="text-[6px] font-semibold uppercase tracking-wide text-stone-400 mb-1">Récentes</p>
-                      {[
-                        { client: "Aminata D.", montant: "45 000", paid: true },
-                        { client: "Fatou K.", montant: "28 500", paid: false },
-                        { client: "Marième S.", montant: "62 000", paid: true },
-                      ].map((f) => (
-                        <div key={f.client} className="flex items-center justify-between bg-white rounded-lg px-1.5 py-1 mb-0.5" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}>
-                          <span className="text-[6.5px] text-stone-700">{f.client}</span>
-                          <span className="text-[6.5px] font-bold text-stone-800">{f.montant}</span>
-                          <span className="text-[5.5px] px-1 py-px rounded-full" style={f.paid ? { backgroundColor: "#dcfce7", color: "#16803c" } : { backgroundColor: "#fff0f3", color: "#b5416a" }}>
-                            {f.paid ? "Payée" : "Att."}
-                          </span>
-                        </div>
-                      ))}
-                      <div className="mt-1.5 rounded-lg px-1.5 py-1 flex items-center gap-1 border" style={{ backgroundColor: "#fff8f0", borderColor: "#fde5c0" }}>
-                        <Clock className="h-2 w-2 text-amber-600 shrink-0" />
-                        <span className="text-[6px] text-amber-700">RDV demain — Kadiatou 10h</span>
-                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Badges flottants */}
-                <div className="absolute -right-8 top-12 bg-white rounded-2xl px-3 py-2 flex items-center gap-2 border border-rose-100" style={{ boxShadow: "0 8px 24px rgba(180,65,106,0.15)" }}>
-                  <div className="w-6 h-6 rounded-full flex items-center justify-center text-[9px]" style={{ backgroundColor: "#dcfce7" }}>✓</div>
-                  <div>
-                    <p className="text-[8px] font-bold text-stone-800">Paiement reçu</p>
-                    <p className="text-[7px] text-stone-400">62 000 FCFA</p>
+                  {/* Barre navigation bas */}
+                  <div className="shrink-0 flex items-end justify-around pb-2 pt-1.5" style={{ backgroundColor: "#fff", borderTop: "1px solid #f5e0e8", height: "56px" }}>
+                    {[
+                      { emoji: "🏠", label: "Accueil", active: true },
+                      { emoji: "👥", label: "Clientes", active: false },
+                      { fab: true, label: "RDV" },
+                      { emoji: "📄", label: "Factures", active: false },
+                      { emoji: "⋯", label: "Autres", active: false },
+                    ].map((item, i) =>
+                      item.fab ? (
+                        <div key={i} className="flex flex-col items-center" style={{ marginTop: "-18px" }}>
+                          <div className="w-10 h-10 rounded-full flex items-center justify-center text-white text-lg font-bold shadow-lg" style={{ background: "linear-gradient(135deg, #b5416a, #7c2048)" }}>+</div>
+                          <span className="text-[6px] text-stone-400 mt-0.5">{item.label}</span>
+                        </div>
+                      ) : (
+                        <div key={i} className="flex flex-col items-center gap-0.5">
+                          <span className="text-sm leading-none">{item.emoji}</span>
+                          <span className="text-[6px]" style={{ color: item.active ? "#b5416a" : "#9ca3af" }}>{item.label}</span>
+                        </div>
+                      )
+                    )}
                   </div>
-                </div>
-                <div className="absolute -left-9 bottom-24 bg-white rounded-2xl px-3 py-2 border border-rose-100" style={{ boxShadow: "0 8px 24px rgba(180,65,106,0.15)" }}>
-                  <p className="text-[8px] font-semibold text-stone-800">✂️ Nouveau RDV</p>
-                  <p className="text-[7px] text-stone-400">Aminata · 14h00</p>
                 </div>
               </div>
             </div>
