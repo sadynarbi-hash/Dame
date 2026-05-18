@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 export function LienReservation({ userId, nomSalon }: { userId: string; nomSalon: string }) {
   const [copied, setCopied] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
-  const baseUrl = typeof window !== "undefined" ? window.location.origin : process.env.NEXT_PUBLIC_APP_URL ?? "";
+  const baseUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "").replace(/\/$/, "") || (typeof window !== "undefined" ? window.location.origin : "");
   const lien = `${baseUrl}/prise-rdv/${userId}`;
 
   const copier = async () => {
