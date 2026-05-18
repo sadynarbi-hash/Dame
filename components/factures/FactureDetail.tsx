@@ -177,16 +177,6 @@ export function FactureDetail({ facture, entreprise }: Props) {
 
         {/* Totaux */}
         <div className="px-6 py-4 space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Sous-total</span>
-            <span>{formatFCFA(facture.sous_total)}</span>
-          </div>
-          {facture.montant_tva > 0 && (
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Taxes (TVA)</span>
-              <span>{formatFCFA(facture.montant_tva)}</span>
-            </div>
-          )}
           <Separator />
           <div className="flex justify-between text-lg font-bold">
             <span>Total</span>
