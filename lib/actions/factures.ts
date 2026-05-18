@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getDataContext } from "@/lib/auth/context";
+import { getEffectivePlan, PLAN_LIMITS } from "@/lib/plan";
 import type { StatutFacture } from "@/types";
 
 export async function createFacture(data: {
@@ -15,6 +16,29 @@ export async function createFacture(data: {
   const ctx = await getDataContext();
   if (!ctx) return { error: "Non authentifié" };
   const { db, userId } = ctx;
+
+  // Vérification limite plan Starter (100 factures/mois)
+  const { data: entreprise } = await db
+    .from("entreprises")
+    .select("abonnement_statut, abonnement_plan, trial_ends_at")
+    .eq("user_id", userId)
+    .single();
+  const plan = getEffectivePlan(
+    entreprise?.abonnement_statut ?? null,
+    entreprise?.abonnement_plan ?? null,
+    entreprise?.trial_ends_at ?? null
+  );
+  if (plan === "starter") {
+    const debut = new Date(); debut.setDate(1); debut.setHours(0, 0, 0, 0);
+    const { count: countMois } = await db
+      .from("factures")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", userId)
+      .gte("date_emission", debut.toISOString().slice(0, 10));
+    if ((countMois ?? 0) >= PLAN_LIMITS.starter.factures_mois) {
+      return { error: `Limite atteinte : le plan Starter est limité à ${PLAN_LIMITS.starter.factures_mois} factures par mois. Passez au plan Business pour des factures illimitées.` };
+    }
+  }
 
   const { count } = await db.from("factures").select("*", { count: "exact", head: true }).eq("user_id", userId);
   const annee = new Date().getFullYear();

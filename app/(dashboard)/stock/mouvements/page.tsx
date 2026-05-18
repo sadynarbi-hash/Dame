@@ -1,7 +1,8 @@
 import { getDataContext } from "@/lib/auth/context";
+import { getEffectivePlan } from "@/lib/plan";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatFCFA, formatDate } from "@/lib/utils/formatters";
-import { ArrowDownCircle, ArrowUpCircle, TrendingUp } from "lucide-react";
+import { ArrowDownCircle, ArrowUpCircle, TrendingUp, Lock } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { MouvementsFilter } from "@/components/stock/MouvementsFilter";
@@ -12,6 +13,40 @@ export default async function MouvementsStockPage({ searchParams }: { searchPara
   const ctx = await getDataContext();
   if (!ctx) redirect("/landing");
   const { db, userId } = ctx;
+
+  const { data: entreprise } = await db
+    .from("entreprises")
+    .select("abonnement_statut, abonnement_plan, trial_ends_at")
+    .eq("user_id", userId)
+    .single();
+  const plan = getEffectivePlan(
+    entreprise?.abonnement_statut ?? null,
+    entreprise?.abonnement_plan ?? null,
+    entreprise?.trial_ends_at ?? null
+  );
+  if (plan === "starter") {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 text-center px-4">
+        <div className="rounded-full bg-amber-100 p-5">
+          <Lock className="h-10 w-10 text-amber-500" />
+        </div>
+        <div>
+          <h2 className="text-2xl font-bold mb-2">Fonctionnalité Business</h2>
+          <p className="text-muted-foreground max-w-md">
+            Le rapport des mouvements de stock et le calcul des bénéfices sont réservés au plan <strong>Business</strong> (35 000 FCFA/mois).
+          </p>
+        </div>
+        <div className="rounded-xl border bg-white p-6 shadow-sm max-w-sm w-full text-left space-y-3">
+          <p className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">Plan Business inclut</p>
+          {["Mouvements de stock & bénéfices", "Factures illimitées", "Jusqu'à 5 utilisateurs", "Support prioritaire"].map(f => (
+            <div key={f} className="flex items-center gap-2 text-sm"><span className="text-green-500">✓</span>{f}</div>
+          ))}
+          <p className="text-2xl font-bold pt-2">35 000 <span className="text-primary text-base font-normal">FCFA/mois</span></p>
+        </div>
+        <Button asChild variant="outline"><Link href="/stock">← Retour au stock</Link></Button>
+      </div>
+    );
+  }
 
   const from = searchParams.from ?? "";
   const to = searchParams.to ?? "";

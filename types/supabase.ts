@@ -14,6 +14,7 @@ export type Database = {
           siret: string | null; numero_tva: string | null;
           rib: string | null; mentions_legales: string | null;
           trial_ends_at: string | null; abonnement_statut: string | null;
+          abonnement_plan: string | null;
           created_at: string; updated_at: string;
         };
         Insert: {
@@ -23,6 +24,7 @@ export type Database = {
           siret?: string | null; numero_tva?: string | null;
           rib?: string | null; mentions_legales?: string | null;
           trial_ends_at?: string | null; abonnement_statut?: string | null;
+          abonnement_plan?: string | null;
           created_at?: string; updated_at?: string;
         };
         Update: {
@@ -32,6 +34,7 @@ export type Database = {
           siret?: string | null; numero_tva?: string | null;
           rib?: string | null; mentions_legales?: string | null;
           trial_ends_at?: string | null; abonnement_statut?: string | null;
+          abonnement_plan?: string | null;
           created_at?: string; updated_at?: string;
         };
         Relationships: [];

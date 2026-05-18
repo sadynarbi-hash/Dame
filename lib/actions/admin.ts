@@ -17,7 +17,7 @@ export async function getComptes() {
   const supabase = createServiceRoleClient();
   const { data } = await supabase
     .from("entreprises")
-    .select("id, user_id, nom, email, abonnement_statut, trial_ends_at, created_at")
+    .select("id, user_id, nom, email, abonnement_statut, abonnement_plan, trial_ends_at, created_at")
     .order("created_at", { ascending: false });
   return data ?? [];
 }
@@ -29,5 +29,12 @@ export async function setStatutCompte(userId: string, statut: "actif" | "suspend
   if (statut === "trial") update.trial_ends_at = new Date(Date.now() + 14 * 86400000).toISOString();
   if (statut === "actif") update.trial_ends_at = null;
   await supabase.from("entreprises").update(update).eq("user_id", userId);
+  revalidatePath("/admin/comptes");
+}
+
+export async function setPlanCompte(userId: string, plan: "starter" | "business") {
+  await checkAdmin();
+  const supabase = createServiceRoleClient();
+  await supabase.from("entreprises").update({ abonnement_plan: plan }).eq("user_id", userId);
   revalidatePath("/admin/comptes");
 }

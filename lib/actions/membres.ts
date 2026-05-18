@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceRoleClient } from "@/lib/supabase/service-role";
+import { getEffectivePlan, PLAN_LIMITS } from "@/lib/plan";
 import type { Permissions } from "@/lib/auth/context";
 
 function serviceKeyAvailable() {
@@ -43,6 +44,29 @@ export async function createMembre(data: {
   email: string; nom: string; role: string; permissions: Permissions;
 }) {
   const { userId, db } = await checkOwner();
+
+  // Vérification plan
+  const { data: entreprise } = await db
+    .from("entreprises")
+    .select("abonnement_statut, abonnement_plan, trial_ends_at")
+    .eq("user_id", userId)
+    .single();
+  const plan = getEffectivePlan(
+    entreprise?.abonnement_statut ?? null,
+    entreprise?.abonnement_plan ?? null,
+    entreprise?.trial_ends_at ?? null
+  );
+  if (plan === "starter") {
+    return { error: "La gestion des utilisateurs nécessite le plan Business (35 000 FCFA/mois)." };
+  }
+  const { count: countMembres } = await db
+    .from("membres_salon")
+    .select("*", { count: "exact", head: true })
+    .eq("owner_user_id", userId)
+    .eq("actif", true);
+  if ((countMembres ?? 0) >= PLAN_LIMITS.business.membres_max) {
+    return { error: `Limite atteinte : le plan Business permet jusqu'à ${PLAN_LIMITS.business.membres_max} utilisateurs.` };
+  }
 
   const { data: existing } = await db
     .from("membres_salon")
