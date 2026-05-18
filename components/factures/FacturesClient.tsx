@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { StatutFactureBadge } from "@/components/shared/StatutBadge";
-import { updateStatutFacture } from "@/lib/actions/factures";
+import { ajouterPaiement } from "@/lib/actions/factures";
 import { formatFCFA, formatDate } from "@/lib/utils/formatters";
 import type { StatutFacture } from "@/types";
 
@@ -22,10 +22,11 @@ type FactureRow = {
 };
 
 const STATUTS: { value: StatutFacture | "tous"; label: string }[] = [
-  { value: "tous", label: "Toutes" },
+  { value: "tous",      label: "Toutes" },
   { value: "brouillon", label: "Brouillon" },
-  { value: "envoyee", label: "Envoyées" },
-  { value: "payee", label: "Payées" },
+  { value: "envoyee",   label: "Envoyées" },
+  { value: "partielle", label: "Paiement partiel" },
+  { value: "payee",     label: "Payées" },
   { value: "en_retard", label: "En retard" },
 ];
 
@@ -43,8 +44,8 @@ export function FacturesClient({ initialFactures }: { initialFactures: FactureRo
   const [customTo, setCustomTo] = useState("");
   const [isPending, startTransition] = useTransition();
 
-  // Modal montant payé
-  const [payModal, setPayModal] = useState<{ id: string; totalTtc: number } | null>(null);
+  // Modal paiement
+  const [payModal, setPayModal] = useState<FactureRow | null>(null);
   const [montantSaisi, setMontantSaisi] = useState("");
 
   // ── Filtrage ──
@@ -53,8 +54,6 @@ export function FacturesClient({ initialFactures }: { initialFactures: FactureRo
     const nomClient = f.client ? `${f.client.prenom} ${f.client.nom}`.toLowerCase() : "";
     if (!f.numero.toLowerCase().includes(q) && !nomClient.includes(q)) return false;
     if (filtreStatut !== "tous" && f.statut !== filtreStatut) return false;
-
-    // Filtre période sur date_emission
     const dateRef = f.date_emission;
     if (period === "aujourd_hui" && dateRef !== todayStr()) return false;
     if (period === "ce_mois" && dateRef < monthStart()) return false;
@@ -68,34 +67,38 @@ export function FacturesClient({ initialFactures }: { initialFactures: FactureRo
   // ── Stats recouvrement ──
   const today = todayStr();
   const moisDebut = monthStart();
-
   const recouvrJour = factures
     .filter(f => f.statut === "payee" && f.date_paiement === today)
     .reduce((s, f) => s + (f.montant_paye ?? f.total_ttc), 0);
-
   const recouvrMois = factures
-    .filter(f => f.statut === "payee" && f.date_paiement && f.date_paiement >= moisDebut)
-    .reduce((s, f) => s + (f.montant_paye ?? f.total_ttc), 0);
+    .filter(f => (f.statut === "payee" || f.statut === "partielle") && f.date_paiement && f.date_paiement >= moisDebut)
+    .reduce((s, f) => s + (f.montant_paye ?? 0), 0);
 
   const totalFiltre = filtered.reduce((s, f) => s + f.total_ttc, 0);
-  const recouvrFiltre = filtered
-    .filter(f => f.statut === "payee")
-    .reduce((s, f) => s + (f.montant_paye ?? f.total_ttc), 0);
+  const recouvrFiltre = filtered.reduce((s, f) => s + (f.montant_paye ?? 0), 0);
 
-  // ── Marquer payée ──
+  // ── Ouvrir modal paiement ──
   const openPayModal = (f: FactureRow) => {
-    setMontantSaisi(String(f.total_ttc));
-    setPayModal({ id: f.id, totalTtc: f.total_ttc });
+    const restant = f.total_ttc - (f.montant_paye ?? 0);
+    setMontantSaisi(String(restant));
+    setPayModal(f);
   };
 
   const confirmerPaiement = () => {
     if (!payModal) return;
-    const montant = parseInt(montantSaisi) || payModal.totalTtc;
+    const montant = parseInt(montantSaisi) || 0;
+    if (montant <= 0) return;
     startTransition(async () => {
-      await updateStatutFacture(payModal.id, "payee", undefined, montant);
+      const res = await ajouterPaiement(payModal.id, montant);
+      if (res?.error) { alert(res.error); return; }
       setFactures(prev => prev.map(f =>
         f.id === payModal.id
-          ? { ...f, statut: "payee" as StatutFacture, montant_paye: montant, date_paiement: todayStr() }
+          ? {
+              ...f,
+              montant_paye: res.nouveauTotal ?? (f.montant_paye ?? 0) + montant,
+              statut: res.solde ? "payee" : "partielle" as StatutFacture,
+              date_paiement: res.solde ? todayStr() : f.date_paiement,
+            }
           : f
       ));
       setPayModal(null);
@@ -153,10 +156,10 @@ export function FacturesClient({ initialFactures }: { initialFactures: FactureRo
       <div className="flex items-center gap-2 flex-wrap">
         <CalendarDays className="h-4 w-4 text-muted-foreground shrink-0" />
         {([
-          { v: "tout", l: "Tout" },
+          { v: "tout",        l: "Tout" },
           { v: "aujourd_hui", l: "Aujourd'hui" },
-          { v: "ce_mois", l: "Ce mois" },
-          { v: "custom", l: "Période" },
+          { v: "ce_mois",     l: "Ce mois" },
+          { v: "custom",      l: "Période" },
         ] as { v: PeriodFilter; l: string }[]).map(({ v, l }) => (
           <button key={v} onClick={() => setPeriod(v)}
             className={`rounded-full px-3 py-1 text-xs font-medium border transition-colors ${period === v ? "bg-stone-800 text-white border-stone-800" : "bg-white border-stone-200 hover:bg-stone-50"}`}>
@@ -176,9 +179,7 @@ export function FacturesClient({ initialFactures }: { initialFactures: FactureRo
       {filtered.length > 0 && (
         <p className="text-sm text-muted-foreground">
           {filtered.length} facture(s) — Facturé : <span className="font-semibold text-foreground">{formatFCFA(totalFiltre)}</span>
-          {recouvrFiltre > 0 && (
-            <> — Recouvré : <span className="font-semibold text-green-600">{formatFCFA(recouvrFiltre)}</span></>
-          )}
+          {recouvrFiltre > 0 && <> — Recouvré : <span className="font-semibold text-green-600">{formatFCFA(recouvrFiltre)}</span></>}
         </p>
       )}
 
@@ -201,75 +202,119 @@ export function FacturesClient({ initialFactures }: { initialFactures: FactureRo
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">Client</th>
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">Date</th>
                   <th className="px-4 py-3 text-right font-medium text-muted-foreground">Montant TTC</th>
-                  <th className="px-4 py-3 text-right font-medium text-muted-foreground">Montant payé</th>
+                  <th className="px-4 py-3 text-right font-medium text-muted-foreground">Payé</th>
+                  <th className="px-4 py-3 text-right font-medium text-muted-foreground">Restant</th>
                   <th className="px-4 py-3 text-left font-medium text-muted-foreground">Date paiement</th>
                   <th className="px-4 py-3 text-center font-medium text-muted-foreground">Statut</th>
                   <th className="px-4 py-3 text-center font-medium text-muted-foreground">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
-                {filtered.map((f) => (
-                  <tr key={f.id} className="hover:bg-muted/30 transition-colors">
-                    <td className="px-4 py-3">
-                      <Link href={`/factures/${f.id}`} className="font-mono font-medium text-primary hover:underline">{f.numero}</Link>
-                    </td>
-                    <td className="px-4 py-3 font-medium">{f.client ? `${f.client.prenom} ${f.client.nom}` : "—"}</td>
-                    <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{formatDate(f.date_emission)}</td>
-                    <td className="px-4 py-3 text-right font-semibold whitespace-nowrap">{formatFCFA(f.total_ttc)}</td>
-                    <td className="px-4 py-3 text-right whitespace-nowrap">
-                      {f.statut === "payee"
-                        ? <span className="font-bold text-green-600">{formatFCFA(f.montant_paye ?? f.total_ttc)}</span>
-                        : <span className="text-muted-foreground">—</span>}
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
-                      {f.date_paiement ? formatDate(f.date_paiement) : "—"}
-                    </td>
-                    <td className="px-4 py-3 text-center"><StatutFactureBadge statut={f.statut} /></td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center justify-center gap-1">
-                        <Button variant="ghost" size="sm" asChild><Link href={`/factures/${f.id}`}>Voir</Link></Button>
-                        {f.statut !== "payee" && (
-                          <Button variant="ghost" size="sm" className="text-green-600 hover:bg-green-50" disabled={isPending}
-                            onClick={() => openPayModal(f)}>
-                            Marquer payée
-                          </Button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {filtered.map((f) => {
+                  const paye = f.montant_paye ?? 0;
+                  const restant = f.total_ttc - paye;
+                  const estSolde = f.statut === "payee";
+                  return (
+                    <tr key={f.id} className="hover:bg-muted/30 transition-colors">
+                      <td className="px-4 py-3">
+                        <Link href={`/factures/${f.id}`} className="font-mono font-medium text-primary hover:underline">{f.numero}</Link>
+                      </td>
+                      <td className="px-4 py-3 font-medium">{f.client ? `${f.client.prenom} ${f.client.nom}` : "—"}</td>
+                      <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{formatDate(f.date_emission)}</td>
+                      <td className="px-4 py-3 text-right font-semibold whitespace-nowrap">{formatFCFA(f.total_ttc)}</td>
+                      {/* Payé */}
+                      <td className="px-4 py-3 text-right whitespace-nowrap">
+                        {paye > 0
+                          ? <span className={`font-bold ${estSolde ? "text-green-600" : "text-amber-600"}`}>{formatFCFA(paye)}</span>
+                          : <span className="text-muted-foreground">—</span>}
+                      </td>
+                      {/* Restant */}
+                      <td className="px-4 py-3 text-right whitespace-nowrap">
+                        {estSolde
+                          ? <span className="text-green-600 font-medium text-xs">✓ Soldé</span>
+                          : restant > 0
+                            ? <span className="font-bold text-red-500">{formatFCFA(restant)}</span>
+                            : <span className="text-muted-foreground">—</span>}
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
+                        {f.date_paiement ? formatDate(f.date_paiement) : "—"}
+                      </td>
+                      <td className="px-4 py-3 text-center"><StatutFactureBadge statut={f.statut} /></td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-center gap-1">
+                          <Button variant="ghost" size="sm" asChild><Link href={`/factures/${f.id}`}>Voir</Link></Button>
+                          {!estSolde && (
+                            <Button variant="ghost" size="sm"
+                              className={paye > 0 ? "text-amber-600 hover:bg-amber-50" : "text-green-600 hover:bg-green-50"}
+                              disabled={isPending}
+                              onClick={() => openPayModal(f)}>
+                              {paye > 0 ? "Compléter" : "Payer"}
+                            </Button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         </div>
       )}
 
-      {/* ── Modal montant payé ── */}
+      {/* ── Modal paiement ── */}
       <Dialog open={!!payModal} onOpenChange={(open) => { if (!open) setPayModal(null); }}>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Montant reçu</DialogTitle>
+            <DialogTitle>
+              {(payModal?.montant_paye ?? 0) > 0 ? "Compléter le paiement" : "Enregistrer un paiement"}
+            </DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="rounded-lg bg-muted/50 px-4 py-3 text-sm">
-              Montant total de la facture : <span className="font-bold">{formatFCFA(payModal?.totalTtc ?? 0)}</span>
+          {payModal && (
+            <div className="space-y-4 py-1">
+              {/* Récapitulatif */}
+              <div className="rounded-xl bg-muted/40 p-4 space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Total facture</span>
+                  <span className="font-semibold">{formatFCFA(payModal.total_ttc)}</span>
+                </div>
+                {(payModal.montant_paye ?? 0) > 0 && (
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Déjà versé</span>
+                    <span className="font-semibold text-amber-600">{formatFCFA(payModal.montant_paye ?? 0)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between border-t pt-2 font-bold">
+                  <span>Restant dû</span>
+                  <span className="text-red-500">{formatFCFA(payModal.total_ttc - (payModal.montant_paye ?? 0))}</span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Montant versé maintenant (FCFA)</Label>
+                <Input
+                  type="number"
+                  value={montantSaisi}
+                  onChange={e => setMontantSaisi(e.target.value)}
+                  className="text-lg font-semibold"
+                  autoFocus
+                />
+                {parseInt(montantSaisi) > 0 && parseInt(montantSaisi) < (payModal.total_ttc - (payModal.montant_paye ?? 0)) && (
+                  <p className="text-xs text-amber-600">
+                    Paiement partiel — il restera <strong>{formatFCFA(payModal.total_ttc - (payModal.montant_paye ?? 0) - parseInt(montantSaisi))}</strong> à régler.
+                  </p>
+                )}
+                {parseInt(montantSaisi) >= (payModal.total_ttc - (payModal.montant_paye ?? 0)) && (
+                  <p className="text-xs text-green-600">✓ La facture sera soldée.</p>
+                )}
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label>Montant effectivement reçu (FCFA)</Label>
-              <Input
-                type="number"
-                value={montantSaisi}
-                onChange={e => setMontantSaisi(e.target.value)}
-                placeholder={String(payModal?.totalTtc ?? 0)}
-                className="text-lg font-semibold"
-              />
-              <p className="text-xs text-muted-foreground">Peut être inférieur si paiement partiel.</p>
-            </div>
-          </div>
+          )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setPayModal(null)}>Annuler</Button>
-            <Button onClick={confirmerPaiement} disabled={isPending} className="bg-green-600 hover:bg-green-700 text-white">
-              {isPending ? "..." : "Confirmer le paiement"}
+            <Button onClick={confirmerPaiement} disabled={isPending || !parseInt(montantSaisi)}
+              className="bg-green-600 hover:bg-green-700 text-white">
+              {isPending ? "..." : "Confirmer"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -6,6 +6,7 @@ const statutFactureConfig: Record<StatutFacture, { label: string; variant: "succ
   envoyee:   { label: "Envoyée",   variant: "info" },
   brouillon: { label: "Brouillon", variant: "purple" },
   en_retard: { label: "En retard", variant: "destructive" },
+  partielle: { label: "Partiel",   variant: "warning" },
 };
 
 const statutRdvConfig: Record<StatutRendezVous, { label: string; variant: "success" | "info" | "warning" | "destructive" | "purple" }> = {

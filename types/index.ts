@@ -1,5 +1,5 @@
 // ── Statuts ────────────────────────────────────────────────────────────────
-export type StatutFacture = "brouillon" | "envoyee" | "payee" | "en_retard";
+export type StatutFacture = "brouillon" | "envoyee" | "payee" | "en_retard" | "partielle";
 export type StatutRendezVous = "confirme" | "en_attente" | "annule" | "termine";
 export type TypeCharge = "salaire" | "loyer" | "electricite" | "fourniture" | "maintenance" | "autre";
 export type UniteStock = "unité" | "litre" | "kg" | "flacon" | "boîte";

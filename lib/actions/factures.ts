@@ -141,6 +141,39 @@ export async function updateStatutFacture(id: string, statut: StatutFacture, mod
   return { success: true };
 }
 
+export async function ajouterPaiement(id: string, montantVerse: number) {
+  const ctx = await getDataContext();
+  if (!ctx) return { error: "Non authentifié" };
+  const { db, userId } = ctx;
+
+  if (!montantVerse || montantVerse <= 0) return { error: "Montant invalide" };
+
+  const { data: facture } = await db
+    .from("factures")
+    .select("total_ttc, montant_paye, statut")
+    .eq("id", id)
+    .eq("user_id", userId)
+    .single();
+  if (!facture) return { error: "Facture introuvable" };
+  if (facture.statut === "payee") return { error: "Facture déjà entièrement payée" };
+
+  const dejaPaye = facture.montant_paye ?? 0;
+  const nouveauTotal = dejaPaye + montantVerse;
+  const estSolde = nouveauTotal >= facture.total_ttc;
+
+  const update: Record<string, unknown> = {
+    montant_paye: estSolde ? facture.total_ttc : nouveauTotal,
+    statut: estSolde ? "payee" : "partielle",
+  };
+  if (estSolde) update.date_paiement = new Date().toISOString().split("T")[0];
+
+  const { error } = await db.from("factures").update(update).eq("id", id).eq("user_id", userId);
+  if (error) return { error: error.message };
+  revalidatePath("/factures");
+  revalidatePath(`/factures/${id}`);
+  return { success: true, solde: estSolde, nouveauTotal: update.montant_paye as number };
+}
+
 export async function deleteFacture(id: string) {
   const ctx = await getDataContext();
   if (!ctx) return { error: "Non authentifié" };
