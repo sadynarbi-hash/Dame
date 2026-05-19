@@ -227,8 +227,11 @@ export function FacturesClient({ initialFactures }: { initialFactures: FactureRo
                   const estSolde = f.statut === "payee";
                   // "partielle" est dérivé visuellement — jamais écrit en base
                   const statutAffiche: StatutFacture = (!estSolde && paye > 0) ? "partielle" : f.statut;
+                  const rowClass = estSolde
+                    ? "bg-green-50 hover:bg-green-100 transition-colors"
+                    : "hover:bg-muted/30 transition-colors";
                   return (
-                    <tr key={f.id} className="hover:bg-muted/30 transition-colors">
+                    <tr key={f.id} className={rowClass}>
                       <td className="px-4 py-3">
                         <Link href={`/factures/${f.id}`} className="font-mono text-primary hover:underline">{f.numero}</Link>
                       </td>
