@@ -227,31 +227,26 @@ export function FacturesClient({ initialFactures }: { initialFactures: FactureRo
                   const estSolde = f.statut === "payee";
                   // "partielle" est dérivé visuellement — jamais écrit en base
                   const statutAffiche: StatutFacture = (!estSolde && paye > 0) ? "partielle" : f.statut;
-                  const rowClass = estSolde
-                    ? "bg-green-50 hover:bg-green-100 transition-colors"
-                    : paye > 0
-                    ? "bg-yellow-50 hover:bg-yellow-100 transition-colors"
-                    : "hover:bg-muted/30 transition-colors";
                   return (
-                    <tr key={f.id} className={rowClass}>
+                    <tr key={f.id} className="hover:bg-muted/30 transition-colors">
                       <td className="px-4 py-3">
-                        <Link href={`/factures/${f.id}`} className="font-mono font-medium text-primary hover:underline">{f.numero}</Link>
+                        <Link href={`/factures/${f.id}`} className="font-mono text-primary hover:underline">{f.numero}</Link>
                       </td>
-                      <td className="px-4 py-3 font-medium">{f.client ? `${f.client.prenom} ${f.client.nom}` : "—"}</td>
+                      <td className="px-4 py-3">{f.client ? `${f.client.prenom} ${f.client.nom}` : "—"}</td>
                       <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">{formatDate(f.date_emission)}</td>
-                      <td className="px-4 py-3 text-right font-semibold whitespace-nowrap">{formatFCFA(f.total_ttc)}</td>
+                      <td className="px-4 py-3 text-right whitespace-nowrap">{formatFCFA(f.total_ttc)}</td>
                       {/* Payé */}
                       <td className="px-4 py-3 text-right whitespace-nowrap">
                         {paye > 0
-                          ? <span className={`font-bold ${estSolde ? "text-green-600" : "text-amber-600"}`}>{formatFCFA(paye)}</span>
+                          ? <span className={estSolde ? "text-green-600" : "text-amber-600"}>{formatFCFA(paye)}</span>
                           : <span className="text-muted-foreground">—</span>}
                       </td>
                       {/* Restant */}
                       <td className="px-4 py-3 text-right whitespace-nowrap">
                         {estSolde
-                          ? <span className="text-green-600 font-medium text-xs">✓ Soldé</span>
+                          ? <span className="text-muted-foreground text-xs">✓ Soldé</span>
                           : restant > 0
-                            ? <span className="font-bold text-red-500">{formatFCFA(restant)}</span>
+                            ? <span className="text-red-500">{formatFCFA(restant)}</span>
                             : <span className="text-muted-foreground">—</span>}
                       </td>
                       <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
