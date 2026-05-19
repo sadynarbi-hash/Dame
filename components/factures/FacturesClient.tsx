@@ -229,7 +229,7 @@ export function FacturesClient({ initialFactures }: { initialFactures: FactureRo
                   const statutAffiche: StatutFacture = (!estSolde && paye > 0) ? "partielle" : f.statut;
                   const rowClass = estSolde
                     ? "bg-green-50 hover:bg-green-100 transition-colors"
-                    : "hover:bg-muted/30 transition-colors";
+                    : "bg-yellow-50 hover:bg-yellow-100 transition-colors";
                   return (
                     <tr key={f.id} className={rowClass}>
                       <td className="px-4 py-3">
